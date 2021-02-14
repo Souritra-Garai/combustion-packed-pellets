@@ -30,6 +30,11 @@
 *.exe
 *.out
 *.app
+
+# Build and Bin directories
+bin/
+build/
+
 © 2021 GitHub, Inc.
 Terms
 Privacy
