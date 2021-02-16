@@ -2,19 +2,25 @@
 #define __KINETICS__
 
 #include <math.h>
-
-#define c 6
-#define r 32.5E-6
-
-#define D_0 9.54E-8
-#define E_A 26E3
+#include <vector>
 
 #define R 8.314
 
-float get_D(float T);
+#define A   1.76123E-2
+#define E_a 26.0E3
 
-float get_t_b(float T);
+// Calculates rate constant using Arrhenius rate law
+// T - Temperature in K
+float calc_k(float const &T);
 
-float get_omega(float T, float eta);
+// Updates value eta according to the implicit scheme (Ref. Section 4.2)
+// eta - holds older value of eta
+// T - Temperature in K
+// Delta_t - size of time step
+// eta is updated in place
+void update_eta(float &eta, float const &T, float Delta_t);
+
+// vectorized version of update_eta
+void update_eta(std::vector<float> &eta, std::vector<float> &T, float Delta_t);
 
 #endif

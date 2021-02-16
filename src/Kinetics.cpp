@@ -1,20 +1,24 @@
 #include "Kinetics.hpp"
 
-float get_D(float T)
+float calc_k(float const &T)
 {
-    return D_0 * exp(- E_A / (R * T));
+    return A * exp(- E_a / (R*T));
 }
 
-float get_t_b(float T)
+void update_eta(float &eta, float const &T, float Delta_t)
 {
-    return pow(r, 2) / (c * get_D(T));
+    float k = calc_k(T);
+    eta = (eta + k * Delta_t) / (1 + k * Delta_t);
+
+    if (eta > 1) eta = 1;
+    if (eta < 0) eta = 0;
 }
 
-float get_omega(float T, float eta)
+void update_eta(std::vector<float> &eta, std::vector<float> &T, float Delta_t)
 {
-    if (eta > 1) throw "eta is greater than 1";
+    if (eta.size() != T.size()) throw "Input array sizes eta and T are dissimilar!!";
 
-    if (eta <= 0.0) return 0.0;
+    for (std::vector<float>::iterator eta_i = eta.begin(), T_i = T.begin(); eta_i < eta.end(); eta_i++, T_i++)
 
-    return (1 - eta) / get_t_b(T);    
+        update_eta(*eta_i, *T_i, Delta_t);
 }

@@ -24,7 +24,6 @@
 #define Cp_NiAl_PC  717.0
 
 // Reaction Zone
-
 #define lambda_p_R      108.0
 #define lambda_NiAl_R   115.0
 #define lambda_Ar_R     0.055
