@@ -1,0 +1,88 @@
+\documentclass[../main.tex]{subfiles}
+
+\begin{document}
+
+
+\subsection{Physics}
+
+For a model reaction
+
+$$ A \longrightarrow B $$
+
+\noindent
+Define the rate of change in conversion $\eta$
+
+\begin{equation}
+    \omega = \frac{d\eta}{dt}
+\end{equation}
+
+\noindent
+Following a first order reaction rate model
+
+\begin{equation}
+    \omega(T, \eta) = k(T) \cdot (1-\eta)
+\end{equation}
+
+\noindent
+Using Arrhenius Rate Law
+
+\begin{equation}
+    k(T) = A \cdot \exp{\left(-\frac{E_a}{R_u T}\right)}
+\end{equation}
+
+
+
+\subsection{Discretization}
+
+Discretizing first order time derivative using backward difference scheme
+
+\begin{equation}
+    \frac{d\eta}{dt} \approx \frac{\eta_i^{n} - \eta_i^{n-1}}{\Delta t}
+\end{equation}
+
+\noindent
+Building implicit update equation for $\eta$
+
+$$
+\frac{\eta_i^{n} - \eta_i^{n-1}}{\Delta t} = k\left(T_i^n\right) \cdot \left( 1 - \eta_i^{n} \right)
+$$
+$$
+\Rightarrow \left[ 1 + k\left( T_i^n \right)\Delta t \right] \cdot \eta_i^n = \eta_i^{n-1} + k\left(T_i^n\right) \Delta t
+$$
+
+\begin{equation}
+    \Rightarrow \eta_i^n = \frac{\eta_i^{n-1} + k\left(T_i^n\right) \Delta t}{1 + k\left( T_i^n \right)\Delta t}
+\end{equation}
+
+
+
+\subsection{Combustion of Ni-coated Al Pellets}
+
+Assuming the diffusion of Al across the Ni coating as the rate dominating step, burning time is given by
+
+\begin{equation}
+    t_b = \omega ^{-1} = \frac{r^2}{cD(T)}
+\end{equation}
+
+where $r$ is the radius of the core, $D$ is the diffusion coefficient, and $c$ is the burning time constant, assumed to be six. \\
+
+\noindent
+The diffusion coefficient as function of temperature is governed by
+
+\begin{equation}
+    D(T) = D_0 \cdot \exp{\left( - \frac{E_a}{R_u T} \right)}
+\end{equation}
+
+where $D_0 = 9.54 \times 10^{-8}\;m^2/s$ and $E_a = 26\times  10^3\;J/mol$. \\
+
+\noindent
+We assume at $\eta=0$,
+
+\begin{equation}
+    \omega \vert_{\eta=0} = \frac{cD}{r} = 1.76123 \times 10^{-2} \cdot \exp{\left(-\frac{26\times10^3}{R_u T}\right)}
+\end{equation}
+
+\noindent
+Comparing with the Arrhenius Rate Law, $A = 1.76123 \times 10^{-2}$ and $E_a = 26\times  10^3$ in SI units. The change in enthalpy for this reaction is $\Delta H = - 118.4 \times 10^3 \; J/mol$.
+
+\end{document}

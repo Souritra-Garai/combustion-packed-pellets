@@ -1,0 +1,50 @@
+\documentclass[../main.tex]{subfiles}
+
+\begin{document}
+
+\subsubsection{Maxwell - Eucken - Bruggeman Model}
+
+A combination of Maxwell - Eucken and Bruggeman models is used to predict the thermal conductivity of the packed particles degassed with a fluid.
+
+\begin{equation}
+\lambda_m \left( \phi_p, \alpha_{p,ME}, \lambda_p, \lambda_f \right) = \frac{X + \sqrt{X^2 + 2\lambda_p\lambda_f}}{2}
+\end{equation}
+
+$$
+    X = \left( 2\lambda_p - \lambda_f \right) \phi_p \left( 1 - \alpha_{p,ME} \right) + \left( 2\lambda_f - \lambda_p \right) \phi_f \left( \frac{2\phi_f + 2\phi_p\alpha_{p,ME}-1}{2\phi_f} \right)
+$$
+
+where -
+
+\begin{itemize}
+    \item $\lambda_p$ is the thermal conductivity of the particle
+    \item $\lambda_f$ is the thermal conductivity of the fluid
+    \item $\phi_p$ is the volume fraction of the particles
+    \item $\phi_f$ is the volume fraction of the fluid
+    \item $\alpha_{p,ME}$ is the volume fraction of the particles with structure represented by Maxwell-Eucken
+\end{itemize}
+
+\subsubsection{Thermal Conductivity of a Coated Spherical Particle}
+
+\begin{equation}
+\lambda_p \left( \lambda_c, \lambda_s, R, r \right) = \frac{\lambda_c^2 R}{ \left( r - R \right) \left[ 2\lambda_c \ln{a} - 2\lambda_s \ln{a} - \left( \frac{\lambda_c^2}{\lambda_s} \right) \right] + r\lambda_c }
+\end{equation}
+
+$$
+a = \frac{b - \lambda_c R}{b - \lambda_c \left( R - r \right)}
+$$
+
+$$
+b = 2 \left( R - r \right) \lambda_s + 2r \lambda_c
+$$
+
+where -
+
+\begin{itemize}
+    \item $\lambda_c$ is the thermal conductivity of the core material
+    \item $\lambda_s$ is the thermal conductivity of the shell material
+    \item $R$ is the outer radius (core + shell)
+    \item $r$ is the inner radius (core)
+\end{itemize}
+
+\end{document}

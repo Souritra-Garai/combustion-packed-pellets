@@ -1,0 +1,31 @@
+\documentclass[../main.tex]{subfiles}
+
+\begin{document}
+
+\subsubsection{Specific Heat Capacity of Fluid - Packed Particle Mixture}
+
+\begin{equation}
+    C_{p,m} \left( \phi_p, \rho_p, \rho_f, C_{p,p}, C_{p,f} \right) = \frac{ \phi_p \rho_p C_{p,p} + \left( 1 - \phi_p \right) \rho_f C_{p,f} }{ \phi_p \rho_p + \left( 1 - \phi_p \right) \rho_f }
+\end{equation}
+
+where - 
+
+\begin{itemize}
+    \item $C_{p,p}$ is the specific heat capacity of the particles
+    \item $C_{p,f}$ is the specific heat capacity of the fluid
+\end{itemize}
+
+\subsubsection{Specific Heat Capacity of Coated Spherical Particle}
+
+\begin{equation}
+    C_{p,p} \left( \rho_c, \rho_s, C_{p,c}, C_{p,s}, R, r \right) = \frac{ r^3 \rho_c C_{p,c} + \left(R^3 - r^3\right) \rho_s C_{p,s} }{ r^3 \rho_c + \left(R^3 - r^3\right) \rho_s}
+\end{equation}
+
+where -
+
+\begin{itemize}
+    \item $C_{p,c}$ is the specific heat capacity of the core material
+    \item $C_{p,s}$ is the specific heat capacity of the shell material
+\end{itemize}
+
+\end{document}

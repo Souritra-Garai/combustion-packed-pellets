@@ -1,0 +1,95 @@
+\documentclass[../main.tex]{subfiles}
+
+\begin{document}
+
+\subsubsection{Preheat Zone}
+
+All thermophysical properties are evaluated at average temperature encountered in the Preheat Zone.
+
+\begin{itemize}
+    \item $\lambda_{m,P} = \lambda_m \left( \phi_p, \alpha_{p,ME}, \lambda_{p,P}, \lambda_{Ar,P} \right)$
+    \item $\rho_{m,P} = \rho_m \left( \phi_p, \rho_{p,P}, \rho_{Ar,P} \right)$
+    \item $C_{p,m,P} = C_{p,m} \left( \phi_p, \rho_{p,P}, \rho_{Ar,P}, C_{p,p,P}, C_{p,Ar,P} \right)$
+\end{itemize}
+
+\noindent Properties of the Ni-coated Al particles in the preheat zone
+
+\begin{itemize}
+    \item $\lambda_{p,P} = \lambda_p \left( \lambda_{Al,P}, \lambda_{Ni,P}, R, r \right) = 137\;W/m-K$
+    \item $\rho_{p,P} = \rho_p \left( \rho_{Al,P}, \rho_{Ni,P}, R, r \right) = 5430\;kg/m^3$
+    \item $C_{p,m,P} = C_{p,p} \left( \rho_{Al,P}, \rho_{Ni,P}, C_{p,Al,P}, C_{p,Ni,P}, R, r \right) = 613\;J/kg-K$
+    \item $r = 32.5 \mu m$
+    \item $R = 39.5 \mu m$
+\end{itemize}
+
+\begin{table}[ht]
+    \centering
+    \begin{tabular}{c|c|c|c}
+         & $\lambda \left( W/m-K \right)$ & $\rho \left( kg/m^3 \right)$ & $C_p \left( J/kg-K \right)$ \\
+         \hline
+         Ar & 0.016 & 0.89 & 520  \\
+         Al & 220   & 2700 & 1060 \\
+         Ni & 66    & 8908 & 440  \\
+    \end{tabular}
+    \caption{Properties of Pure Substances in the Preheat Zone}
+    \label{tab:my_label}
+\end{table}
+
+\subsubsection{Post Combustion Zone}
+
+All thermophysical properties are evaluated at average temperature encountered in the Post Combustion Zone.
+
+\begin{itemize}
+    \item $\lambda_{m,PC} = \lambda_m \left( \phi_p, \alpha_{p,ME}, \lambda_{NiAl,PC}, \lambda_{Ar,PC} \right)$
+    \item $\rho_{m,PC} = \rho_m \left( \phi_p, \rho_{NiAl,PC}, \rho_{Ar,PC} \right)$
+    \item $C_{p,m,PC} = C_{p,m} \left( \phi_p, \rho_{NiAl,PC}, \rho_{Ar,PC}, C_{p,NiAl,PC}, C_{p,Ar,PC} \right)$
+\end{itemize}
+
+\begin{table}[ht]
+    \centering
+    \begin{tabular}{c|c|c|c}
+         & $\lambda \left( W/m-K \right)$ & $\rho \left( kg/m^3 \right)$ & $C_p \left( J/kg-K \right)$ \\
+         \hline
+         Ar   & 0.055 & 0.37 & 520  \\
+         NiAl & 115   & 5900 & 717  \\
+    \end{tabular}
+    \caption{Properties of Pure Substances in the Post Combustion Zone}
+\end{table}
+
+\subsubsection{Reaction Zone}
+
+All thermophysical properties are evaluated at average temperature encountered in the Reaction Zone.
+
+\begin{itemize}
+    \item $\lambda_{m,R} = \lambda_m \left( \phi_p, \alpha_{p,ME}, \lambda_{p,R}, \lambda_{Ar,R} \right)$
+    \item $\rho_{m,R} = \rho_m \left( \phi_p, \rho_{p,R}, \rho_{Ar,R} \right)$
+    \item $C_{p,m,R} = C_{p,m} \left( \phi_p, \rho_{p,R}, \rho_{Ar,R}, C_{p,p,R}, C_{p,Ar,R} \right)$
+\end{itemize}
+
+\noindent The mean properties of the reactants and the products is considered for the particles.
+
+\begin{itemize}
+    \item $\lambda_{p,R} = 0.5 \left( \lambda_p \left( \lambda_{Al,R}, \lambda_{Ni,R}, R, r \right) + \lambda_{NiAl, R} \right)$
+    \item $\rho_{p,R} = 0.5 \left( \rho_p \left( \rho_{Al,R}, \rho_{Ni,R}, R, r \right) + \rho_{NiAl,R} \right)$
+    \item $C_{p,m,R} = 0.5 \left( C_{p,p} \left( \rho_{Al,R}, \rho_{Ni,R}, C_{p,Al,R}, C_{p,Ni,R}, R, r \right) + C_{p,NiAl,R} \right)$
+    \item $\lambda_p \left( \lambda_{Al,R}, \lambda_{Ni,R}, R, r \right) = 108\;W/m-K$
+    \item $\rho_p \left( \rho_{Al,R}, \rho_{Ni,R}, R, r \right) = 5430\;kg/m^3$
+    \item $C_{p,p} \left( \rho_{Al,R}, \rho_{Ni,R}, C_{p,Al,R}, C_{p,Ni,R}, R, r \right) = 760\;J/kg-K$
+    \item $r = 32.5 \mu m$
+    \item $R = 39.5 \mu m$
+\end{itemize}
+
+\begin{table}[htbp]
+    \centering
+    \begin{tabular}{c|c|c|c}
+         & $\lambda \left( W/m-K \right)$ & $\rho \left( kg/m^3 \right)$ & $C_p \left( J/kg-K \right)$ \\
+         \hline
+         Ar   & 0.055 & 0.37 & 520  \\
+         Al   & 130   & 2700 & 1176 \\
+         Ni   & 80    & 8908 & 670  \\
+         NiAl & 115   & 5900 & 717
+    \end{tabular}
+    \caption{Properties of Pure Substances in the Reaction Zone}
+\end{table}
+
+\end{document}
