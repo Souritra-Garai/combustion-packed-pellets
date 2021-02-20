@@ -40,6 +40,11 @@ $(BUILDDIR)/Kinetics.o : $(SRCDIR)/Kinetics.cpp $(INCDIR)/Kinetics.hpp
 	@echo "\nCompiling Kinetics...";
 	$(CC) $(CFLAGS) $(INC) -c $(SRCDIR)/Kinetics.cpp -o $(BUILDDIR)/Kinetics.o
 
+$(BUILDDIR)/Temperature_Predictor_Iterator.o : $(SRCDIR)/Temperature_Predictor_Iterator.cpp $(INCDIR)/Temperature_Predictor_Iterator.hpp
+	@mkdir -p $(BUILDDIR);
+	@echo "\nCompiling Temperature_Predictor_Iterator...";
+	$(CC) $(CFLAGS) $(INC) -c $(SRCDIR)/Temperature_Predictor_Iterator.cpp -o $(BUILDDIR)/Temperature_Predictor_Iterator.o
+
 # Builds the example for TDMA solver
 test_TDMA_solver : $(BUILDDIR)/TDMA_example.o $(BUILDDIR)/TDMA_solver.o
 	@echo "\nBuilding TDMA_example...";

@@ -2,6 +2,11 @@
 
 using namespace TDMA_solver;
 
+solver::solver()
+{
+    ready_to_solve = false;
+}
+
 solver::solver(int m)
 {
     n = m;

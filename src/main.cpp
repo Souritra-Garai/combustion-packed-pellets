@@ -103,8 +103,6 @@ int main(int argc, char const *argv[])
         T_hat = my_solver.solve(B);
 
         update_eta(eta_arr, T_hat, Dt);
-        
-        for 
     }
 
     return 0;

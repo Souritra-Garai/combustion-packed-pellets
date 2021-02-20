@@ -44,6 +44,7 @@ namespace TDMA_solver
 
             // Constructor
             // m is the size of x vector in A.x = b
+            solver();
             solver(int m);
 
             // function to initialise the solver
