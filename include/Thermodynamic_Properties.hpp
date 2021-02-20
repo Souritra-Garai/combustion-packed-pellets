@@ -36,6 +36,8 @@
 #define Cp_NiAl_R   717.0
 #define Cp_Ar_R     520.0
 
+#define Stefan_Boltzmann_constant   5.670374419E-8 
+
 // Calculates thermal conductivity of packed particles
 // and fluid mixture (Ref. Section 3.1.1)
 // phi_p - volume fraction of packed particles

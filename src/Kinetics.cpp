@@ -5,6 +5,11 @@ float calc_k(float const &T)
     return A * exp(- E_a / (R*T));
 }
 
+float calc_k_prime(float const &T)
+{
+    return A * E_a * exp(- E_a / (R*T)) / (R*T*T);
+}
+
 void update_eta(float &eta, float const &T, float Delta_t)
 {
     float k = calc_k(T);

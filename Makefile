@@ -2,7 +2,7 @@
 CC := g++
 
 # Building this file is the main objective
-TARGET := bin/main
+TARGET := bin/simulate_pellet_combustion
 
 # Directories
 SRCDIR := src
@@ -25,25 +25,30 @@ $(TARGET) : $(OBJECTS)
 	@echo "\nLinking all...";
 	$(CC) $(OBJECTS) $(CFLAGS) $(LIB) -o $(TARGET)
 
+$(BUILDDIR)/main.o : $(SRCDIR)/main.cpp $(INCDIR)/Kinetics.hpp $(INCDIR)/TDMA_solver.hpp $(INCDIR)/Thermodynamic_Properties.hpp $(INCDIR)/Temperature_Step_Iterator.hpp
+	@mkdir -p $(BUILDDIR);
+	@echo "\nCompiling main...";
+	$(CC) $(CFLAGS) $(INC) -c $(SRCDIR)/main.cpp -o $(BUILDDIR)/main.o
+
 $(BUILDDIR)/TDMA_solver.o : $(SRCDIR)/TDMA_solver.cpp $(INCDIR)/TDMA_solver.hpp
 	@mkdir -p $(BUILDDIR);
 	@echo "\nCompiling TDMA_solver...";
 	$(CC) $(CFLAGS) $(INC) -c $(SRCDIR)/TDMA_solver.cpp -o $(BUILDDIR)/TDMA_solver.o
 
-$(BUILDDIR)/Thermodynamic_properties.o : $(SRCDIR)/Thermodynamic_properties.cpp $(INCDIR)/Thermodynamic_properties.hpp
+$(BUILDDIR)/Thermodynamic_Properties.o : $(SRCDIR)/Thermodynamic_Properties.cpp $(INCDIR)/Thermodynamic_Properties.hpp
 	@mkdir -p $(BUILDDIR);
-	@echo "\nCompiling Thermodynamic_properties...";
-	$(CC) $(CFLAGS) $(INC) -c $(SRCDIR)/Thermodynamic_properties.cpp -o $(BUILDDIR)/Thermodynamic_properties.o
+	@echo "\nCompiling Thermodynamic_Properties...";
+	$(CC) $(CFLAGS) $(INC) -c $(SRCDIR)/Thermodynamic_Properties.cpp -o $(BUILDDIR)/Thermodynamic_Properties.o
 
 $(BUILDDIR)/Kinetics.o : $(SRCDIR)/Kinetics.cpp $(INCDIR)/Kinetics.hpp
 	@mkdir -p $(BUILDDIR);
 	@echo "\nCompiling Kinetics...";
 	$(CC) $(CFLAGS) $(INC) -c $(SRCDIR)/Kinetics.cpp -o $(BUILDDIR)/Kinetics.o
 
-$(BUILDDIR)/Temperature_Predictor_Iterator.o : $(SRCDIR)/Temperature_Predictor_Iterator.cpp $(INCDIR)/Temperature_Predictor_Iterator.hpp
+$(BUILDDIR)/Temperature_Step_Iterator.o : $(SRCDIR)/Temperature_Step_Iterator.cpp $(INCDIR)/Temperature_Step_Iterator.hpp
 	@mkdir -p $(BUILDDIR);
-	@echo "\nCompiling Temperature_Predictor_Iterator...";
-	$(CC) $(CFLAGS) $(INC) -c $(SRCDIR)/Temperature_Predictor_Iterator.cpp -o $(BUILDDIR)/Temperature_Predictor_Iterator.o
+	@echo "\nCompiling Temperature_Step_Iterator...";
+	$(CC) $(CFLAGS) $(INC) -c $(SRCDIR)/Temperature_Step_Iterator.cpp -o $(BUILDDIR)/Temperature_Step_Iterator.o
 
 # Builds the example for TDMA solver
 test_TDMA_solver : $(BUILDDIR)/TDMA_example.o $(BUILDDIR)/TDMA_solver.o
