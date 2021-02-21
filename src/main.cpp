@@ -10,15 +10,15 @@
 
 using namespace std;
 
-#define MAX_ITER_CONV   100
+#define MAX_ITER_CONV   1000
 #define MAX_T_STEPS     1000
 
-#define N 500
+#define N 100
 
 #define L 6.35E-3   // m
 #define D 6.35E-3   // m
 
-#define Dt 1E-3     // s
+#define Dt 1E-5     // s
 #define Dx L/N
 
 #define phi     0.5
@@ -28,12 +28,12 @@ using namespace std;
 #define T_i 988.0   // K
 #define T_f 1911.0  // K
 
-#define FILENAME "T_Solution.csv"
+#define FILENAME "solutions/T_Solution.csv"
 
 // 2D Array to store Temperature evolution
 // Axis 0 (index#1) is time point
 // Axis 1 (index#2) is x point
-vector<vector<float>> T_data(MAX_T_STEPS, vector<float>(N, T_a));
+vector<vector<float>> T_data(1, vector<float>(N+1, T_a));
 // N grid points excluding the grid point at x=0
 // and includeing the point at x=L
 
@@ -48,6 +48,8 @@ Temperature_Corrector_Iterator TCI(N);
 // Functions to set the boundary conditions
 void set_BC_X0(float &e, float &f, float &g, float &b);
 void set_BC_XN(float &e, float &f, float &g, float &b);
+
+bool converged(vector<float>, vector<float>);
 
 int main(int argc, char const *argv[])
 {
@@ -69,6 +71,8 @@ int main(int argc, char const *argv[])
 
     cout << "Thermophysical properties initialized...\n";
 
+    T_data[0][0] = T_f;
+
     TPI.assign_coefficients_P  (lambda_m_P, rho_m_P, Cp_m_P, Dx, Dt);
     TPI.assign_coefficients_PC (lambda_m_P, rho_m_P, Cp_m_P, Dx, Dt);
     TPI.assign_coefficients_R  (lambda_m_P, rho_m_P, Cp_m_P, Dx, Dt);
@@ -87,18 +91,31 @@ int main(int argc, char const *argv[])
 
     for (int n=1; n < MAX_T_STEPS; n++)
     {        
-        TPI.setup_banded_matrix(T_data[n-1].begin(), eta_arr.begin(), &set_BC_X0, &set_BC_XN);
-        vector<float> T_hat = TPI.get_solution();
-      
-        update_eta(eta_arr, T_hat, Dt);
+        vector<float> T_nk, T_hat;
+        T_nk = T_data[n-1];
 
-        TCI.temperature_update(T_hat.begin(), eta_arr.begin(), T_data[n].begin());
+        unsigned int i = 0;
 
-        cout << "Completed " << n << " out of " << MAX_T_STEPS << " time steps\n";
+        do
+        {
+            TPI.setup_banded_matrix(T_nk.begin()+1, eta_arr.begin(), &set_BC_X0, &set_BC_XN);
+            T_hat = TPI.get_solution();
+
+            update_eta(eta_arr, T_hat, Dt);
+
+            TCI.temperature_update(T_hat.begin(), eta_arr.begin(), T_nk.begin()+1);
+
+            cout << "\tPerformed " << ++i << " iterations under time step " << n << endl;
+
+        } while (!converged(T_hat, T_nk) && i < MAX_ITER_CONV);
+
+        T_data.push_back(T_nk);       
+
+        cout << "Completed " << n << " time steps\n";
+
+        if (converged(T_data[n-1], T_data[n])) break;
     }
 
-    cout << "Completed " << MAX_T_STEPS << " out of " << MAX_T_STEPS << " time steps\n";
-    
     cout << "Saving to file...\n";
 
     ofstream file(FILENAME);
@@ -123,3 +140,14 @@ int main(int argc, char const *argv[])
 void set_BC_X0(float &e, float &f, float &g, float &b) { b -= e * T_f; }
 
 void set_BC_XN(float &e, float &f, float &g, float &b) { e += g; }
+
+bool converged(vector<float> T_prev, vector<float> T_new)
+{
+    bool flag = true;
+
+    for (auto T_p = T_prev.begin(), T_n = T_new.begin(); T_p < T_prev.end() && flag; T_p++, T_n++)
+    {
+        if ((*T_p - *T_n > 0.001) || (*T_p - *T_n < -0.001)) flag = false;
+    }
+    return flag;
+}
