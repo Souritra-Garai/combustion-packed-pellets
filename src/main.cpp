@@ -6,7 +6,7 @@
 #include "Kinetics.hpp"
 #include "TDMA_solver.hpp"
 #include "Thermodynamic_Properties.hpp"
-#include "Temperature_Step_Iterator.hpp"
+#include "Temperature_Iterator.hpp"
 
 using namespace std;
 
@@ -73,9 +73,9 @@ int main(int argc, char const *argv[])
 
     T_data[0][0] = T_f;
 
-    TPI.assign_coefficients_P  (lambda_m_P, rho_m_P, Cp_m_P, Dx, Dt);
-    TPI.assign_coefficients_PC (lambda_m_P, rho_m_P, Cp_m_P, Dx, Dt);
-    TPI.assign_coefficients_R  (lambda_m_P, rho_m_P, Cp_m_P, Dx, Dt);
+    TPI.assign_coefficients_P  (lambda_m_P,     rho_m_P,    Cp_m_P,     Dx, Dt);
+    TPI.assign_coefficients_PC (lambda_m_PC,    rho_m_PC,   Cp_m_PC,    Dx, Dt);
+    TPI.assign_coefficients_R  (lambda_m_R,     rho_m_R,    Cp_m_R,     Dx, Dt);
 
     TPI.set_ignition_temperature(T_i);
 

@@ -35,7 +35,8 @@
 bin/
 build/
 
-include/Combustion_Model.hpp
+# vscode folder
+.vscode/
 
 © 2021 GitHub, Inc.
 Terms
