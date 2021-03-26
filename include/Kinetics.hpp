@@ -11,6 +11,6 @@
 #define Q_r     118.4E3
 #define MW_Prod 85.674939E-3
 
-std::pair<float, float> reaction_term(float omega, float T, float Delta_t);
+std::pair<float, float> reaction_term(float eta, float omega, float T, float Delta_t);
 
 #endif

@@ -40,10 +40,7 @@ vector<vector<float>> T_data(1, vector<float>(N+1, T_a));
 // Array for holding the conversion at a point
 vector<float> eta_arr(N, 0.0);
 
-// Everything for performing the temperature prediction step
-Temperature_Predictor_Iterator TPI(N);
-// Everything for performing the temperature prediction step
-Temperature_Corrector_Iterator TCI(N);
+// Everything for performing the temperature iteration
 
 // Functions to set the boundary conditions
 void set_BC_X0(float &e, float &f, float &g, float &b);

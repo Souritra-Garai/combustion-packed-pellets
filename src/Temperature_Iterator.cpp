@@ -2,7 +2,7 @@
 
 // Function declarations for class Temperature Predictor Step Iterator
 
-Temperature_Iterator::Temperature_Iterator(unsigned int n): 
+Temperature_Iterator::Temperature_Iterator(unsigned int n, float del_t): 
     E_arr(n,0),
     F_arr(n,0),
     G_arr(n,0),
@@ -10,11 +10,15 @@ Temperature_Iterator::Temperature_Iterator(unsigned int n):
     my_solver(n),
     Temperature_Iterator_Base(n)
 {
+    Delta_t = del_t;
+
     e_P = e_R = e_PC = 0;
-    f_P = f_R = f_PC = 0;
+    f_0_P = f_0_R = f_0_PC = 0;
     g_P = g_R = g_PC = 0;
-    b_1_coef_P = b_1_coef_R = b_1_coef_PC = 0;
-    b_static_P = b_static_R = b_static_PC = 0;
+
+    b_1_P = b_1_R = b_1_PC = 0;
+    b_0 = 0;
+
     reset_iterators();
 }
 
@@ -41,28 +45,36 @@ void Temperature_Iterator::setup_banded_matrix(
     void (*set_BC_X0)(float &e, float &f, float &g, float &b),
     void (*set_BC_XN)(float &e, float &f, float &g, float &b)    )
 {
-    for (reset_iterators(); in_post_combustion_zone(*eta); increment_iterators(T, eta))
+    for (reset_iterators(); in_post_combustion_zone(*eta); increment_iterators(T, eta, omega))
     {
         *E = e_PC;
-        *F = f_PC;
         *G = g_PC;
-        *B = b_1_coef_PC*(*T);
+
+        *F = f_0_PC + f_3 * pow(*T, 3);
+
+        *B = b_0 + b_1_PC * (*T) + b_4 * pow(*T, 4);
     }
 
-    for (; in_reaction_zone(*T); increment_iterators(T))
+    for (; in_reaction_zone(*T); increment_iterators(T, eta, omega))
     {
         *E = e_R;
-        *F = f_R;
         *G = g_R;
-        *B = b_1_coef_R*(*T);
+
+        pair<float, float> reaction_terms = reaction_term(*omega, *T, Delta_t);
+
+        *F = f_0_R + f_3 * pow(*T, 3) - reaction_terms.second;
+
+        *B = b_0 + b_1_R * (*T) + b_4 * pow(*T, 4) + reaction_terms.first;
     }
     
     for (; iterators_in_range(); increment_iterators(T))
     {
         *E = e_P;
-        *F = f_P;
         *G = g_P;
-        *B = b_1_coef_P*(*T);
+
+        *F = f_0_P + f_3 * pow(*T, 3);
+
+        *B = b_0 + b_1_P * (*T) + b_4 * pow(*T, 4);
     }
 
     set_BC_X0(E_arr[0], F_arr[0], G_arr[0], B_arr[0]);
@@ -76,37 +88,56 @@ vector<float> Temperature_Iterator::get_solution()
     return my_solver.solve(B_arr);
 }
 
-void Temperature_Iterator::assign_coefficients_P  (float lambda, float rho, float Cp, float Delta_x, float Delta_t)
+void Temperature_Iterator::assign_coefficients_P  (float lambda, float rho, float Cp, float Delta_x)
 {
     e_P = calc_e(lambda, Delta_x);
-    f_P = calc_f(lambda, rho, Cp, D, h, Delta_x, Delta_t);
     g_P = calc_g(lambda, Delta_x);
-    b_static_P = calc_b(rho, Cp, Delta_t);
+
+    f_0_P = calc_f(lambda, rho, Cp, Delta_x, Delta_t);
+
+    b_1_P = calc_b_1(rho, Cp, Delta_t);
 }
 
-void Temperature_Iterator::assign_coefficients_PC (float lambda, float rho, float Cp, float Delta_x, float Delta_t)
+void Temperature_Iterator::assign_coefficients_PC (float lambda, float rho, float Cp, float Delta_x)
 {
     e_PC = calc_e(lambda, Delta_x);
-    f_PC = calc_f(lambda, rho, Cp, D, h, Delta_x, Delta_t);
     g_PC = calc_g(lambda, Delta_x);
-    b_static_PC = calc_b(rho, Cp, Delta_t);
+
+    f_0_PC = calc_f(lambda, rho, Cp, Delta_x, Delta_t);
+
+    b_1_PC = calc_b_1(rho, Cp, Delta_t);
 }
 
-void Temperature_Iterator::assign_coefficients_R  (float lambda, float rho, float Cp, float Delta_x, float Delta_t)
+void Temperature_Iterator::assign_coefficients_R  (float lambda, float rho, float Cp, float Delta_x)
 {
     e_R = calc_e(lambda, Delta_x);
-    f_R = calc_f(lambda, rho, Cp, D, h, Delta_x, Delta_t);
     g_R = calc_g(lambda, Delta_x);
-    b_static_R = calc_b(rho, Cp, Delta_t);
+
+    f_0_R = calc_f(lambda, rho, Cp, Delta_x, Delta_t);
+
+    b_1_R = calc_b_1(rho, Cp, Delta_t);
 }
 
 float Temperature_Iterator::calc_e(float lambda, float Delta_x) {return - lambda / (Delta_x * Delta_x);}
 float Temperature_Iterator::calc_g(float lambda, float Delta_x) {return - lambda / (Delta_x * Delta_x);}
-float Temperature_Iterator::calc_b(float rho, float Cp, float Delta_t)
+
+float Temperature_Iterator::calc_b_1(float rho, float Cp, float Delta_t) {return rho * Cp / Delta_t;}
+
+float Temperature_Iterator::calc_f(float lambda, float rho, float Cp, float Delta_x, float Delta_t)
 {
-    return rho * Cp / Delta_t;
+    return  (2 * lambda / (Delta_x * Delta_x)) +
+            (rho * Cp / Delta_t);
 }
-float Temperature_Iterator::calc_f(float lambda, float rho, float Cp, float D, float h, float Delta_x, float Delta_t)
+
+void Temperature_Iterator::set_curved_surface_heat_loss(float Dia, float h_CSA, float epsi, float T_atmos)
 {
-    return 2 * lambda / (Delta_x * Delta_x) + rho * Cp / Delta_t - (4 / D)*h;
+    b_0 = 4 * (h_CSA * T_atmos + epsi * Stefan_Boltzmann_constant * pow(T_atmos, 4)) / Dia;
+
+    b_4 = 4 * 3 * epsi * Stefan_Boltzmann_constant / Dia;
+
+    f_3 = 4 * 4 * epsi * Stefan_Boltzmann_constant / Dia;
+
+    f_0_P  += 4 * h_CSA / Dia;
+    f_0_R  += 4 * h_CSA / Dia;
+    f_0_PC += 4 * h_CSA / Dia;
 }

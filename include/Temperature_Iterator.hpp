@@ -15,15 +15,14 @@ class Temperature_Iterator: public Temperature_Iterator_Base
 {
     private:
 
-        float D;
-        float h;
-        float epsilon;
+        float Delta_t;
 
         float e_P, e_R, e_PC;
-        float f_P, f_R, f_PC;
         float g_P, g_R, g_PC;
-        float b_1_coef_P, b_1_coef_R, b_1_coef_PC;
-        float b_static_P, b_static_R, b_static_PC;
+        float f_0_P, f_0_R, f_0_PC;
+        float b_1_P, b_1_R, b_1_PC;
+        
+        float b_0, b_4, f_3;
 
         vector<float> E_arr, F_arr, G_arr, B_arr;
         vector<float>::iterator E, F, G, B;
@@ -37,16 +36,22 @@ class Temperature_Iterator: public Temperature_Iterator_Base
                 
         float calc_e(float lambda, float Delta_x);
         float calc_g(float lambda, float Delta_x);
-        float calc_f(float lambda, float rho, float Cp, float D, float h, float Delta_x, float Delta_t);
-        float calc_b(float rho, float Cp, float Dt);
+        float calc_f(float lambda, float rho, float Cp, float Delta_x, float Delta_t);
+        float calc_b_1(float rho, float Cp, float Dt);
     
     public:
 
-        Temperature_Iterator(unsigned int n);
+        Temperature_Iterator(unsigned int n, float delta_t);
 
-        void assign_coefficients_P  (float lambda, float rho, float Cp, float Delta_x, float Delta_t);
-        void assign_coefficients_R  (float lambda, float rho, float Cp, float Delta_x, float Delta_t);
-        void assign_coefficients_PC (float lambda, float rho, float Cp, float Delta_x, float Delta_t);
+        void assign_coefficients_P  (float lambda, float rho, float Cp, float Delta_x);
+        void assign_coefficients_R  (float lambda, float rho, float Cp, float Delta_x);
+        void assign_coefficients_PC (float lambda, float rho, float Cp, float Delta_x);
+
+        void set_curved_surface_heat_loss(
+            float diameter,
+            float convective_heat_transfer_coeff,
+            float emmisivity,
+            float T_atmosphere  );
 
         void setup_banded_matrix(
             vector<float>::iterator T,
