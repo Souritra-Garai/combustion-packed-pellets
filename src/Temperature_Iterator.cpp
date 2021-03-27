@@ -19,6 +19,8 @@ Temperature_Iterator::Temperature_Iterator(unsigned int n, float del_t):
     b_1_P = b_1_R = b_1_PC = 0;
     b_0 = 0;
 
+    reaction_term_coeff = 0;
+
     reset_iterators();
 }
 
@@ -60,11 +62,11 @@ void Temperature_Iterator::setup_banded_matrix(
         *E = e_R;
         *G = g_R;
 
-        pair<float, float> reaction_terms = reaction_term(*omega, *T, Delta_t);
+        pair<float, float> reaction_terms = reaction_term(*eta, *omega, *T, Delta_t);
 
-        *F = f_0_R + f_3 * pow(*T, 3) - reaction_terms.second;
+        *F = f_0_R + f_3 * pow(*T, 3) - reaction_term_coeff * reaction_terms.second;
 
-        *B = b_0 + b_1_R * (*T) + b_4 * pow(*T, 4) + reaction_terms.first;
+        *B = b_0 + b_1_R * (*T) + b_4 * pow(*T, 4) + reaction_term_coeff * reaction_terms.first;
     }
     
     for (; iterators_in_range(); increment_iterators(T))
@@ -125,8 +127,7 @@ float Temperature_Iterator::calc_b_1(float rho, float Cp, float Delta_t) {return
 
 float Temperature_Iterator::calc_f(float lambda, float rho, float Cp, float Delta_x, float Delta_t)
 {
-    return  (2 * lambda / (Delta_x * Delta_x)) +
-            (rho * Cp / Delta_t);
+    return  (2 * lambda / (Delta_x * Delta_x)) + (rho * Cp / Delta_t);
 }
 
 void Temperature_Iterator::set_curved_surface_heat_loss(float Dia, float h_CSA, float epsi, float T_atmos)
@@ -140,4 +141,9 @@ void Temperature_Iterator::set_curved_surface_heat_loss(float Dia, float h_CSA, 
     f_0_P  += 4 * h_CSA / Dia;
     f_0_R  += 4 * h_CSA / Dia;
     f_0_PC += 4 * h_CSA / Dia;
+}
+
+void Temperature_Iterator::set_reaction_term_coeff(float density, float volume_fraction, float mol_wt)
+{
+    reaction_term_coeff = volume_fraction * density / mol_wt;
 }

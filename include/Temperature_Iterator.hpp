@@ -23,6 +23,7 @@ class Temperature_Iterator: public Temperature_Iterator_Base
         float b_1_P, b_1_R, b_1_PC;
         
         float b_0, b_4, f_3;
+        float reaction_term_coeff;
 
         vector<float> E_arr, F_arr, G_arr, B_arr;
         vector<float>::iterator E, F, G, B;
@@ -46,6 +47,8 @@ class Temperature_Iterator: public Temperature_Iterator_Base
         void assign_coefficients_P  (float lambda, float rho, float Cp, float Delta_x);
         void assign_coefficients_R  (float lambda, float rho, float Cp, float Delta_x);
         void assign_coefficients_PC (float lambda, float rho, float Cp, float Delta_x);
+
+        void set_reaction_term_coeff (float density, float volume_fraction, float mol_wt);
 
         void set_curved_surface_heat_loss(
             float diameter,

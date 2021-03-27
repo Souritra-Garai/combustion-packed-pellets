@@ -4,7 +4,7 @@ std::pair<float, float> reaction_term(float eta, float omega, float T, float Del
 {
     float exp_term = exp(E_a / (R * T));
     
-    float numerator     = A * (2 - 2 * eta - omega * Delta_t);
+    float numerator     = - DH_r * A * (2 - 2 * eta - omega * Delta_t);
     float denominator   = Delta_t * A + 2 * exp_term;
     
     float first_order_coeff = (2 * E_a * exp_term / (R * T*T)) * numerator / (denominator*denominator);
