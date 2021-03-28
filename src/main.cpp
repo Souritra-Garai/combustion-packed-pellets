@@ -4,7 +4,6 @@
 #include <iostream>
 
 #include "Kinetics.hpp"
-#include "TDMA_solver.hpp"
 #include "Thermodynamic_Properties.hpp"
 #include "Temperature_Iterator.hpp"
 
@@ -30,6 +29,12 @@ using namespace std;
 
 #define FILENAME "solutions/T_Solution.csv"
 
+#define rho_Ni 8900 // kg / m3
+
+#define D_core 65   // um
+#define D_over 69   // um
+
+
 // 2D Array to store Temperature evolution
 // Axis 0 (index#1) is time point
 // Axis 1 (index#2) is x point
@@ -39,8 +44,10 @@ vector<vector<float>> T_data(1, vector<float>(N+1, T_a));
 
 // Array for holding the conversion at a point
 vector<float> eta_arr(N, 0.0);
+vector<float> omega_arr(N, 0.0);
 
 // Everything for performing the temperature iteration
+Temperature_Iterator my_temp_iter(N, Dt);
 
 // Functions to set the boundary conditions
 void set_BC_X0(float &e, float &f, float &g, float &b);
@@ -50,7 +57,7 @@ bool converged(vector<float>, vector<float>);
 
 int main(int argc, char const *argv[])
 {
-    cout << "Starting program...\n";
+    std::cout << "Starting program...\n";
 
     // Finding the mean thermophysical properties for diffrent zones
     // Pre heat zone
@@ -66,54 +73,45 @@ int main(int argc, char const *argv[])
     float Cp_m_R    = calc_Cp_m(phi, 0.5*(rho_p_R + rho_NiAl_R), rho_Ar_R, 0.5*(Cp_p_R + Cp_NiAl_R), Cp_Ar_R);
     float Cp_m_PC   = calc_Cp_m(phi, rho_NiAl_PC, rho_Ar_PC, Cp_NiAl_PC, Cp_Ar_PC);
 
-    cout << "Thermophysical properties initialized...\n";
+    std::cout << "Thermophysical properties initialized...\n";
 
     T_data[0][0] = T_f;
 
-    TPI.assign_coefficients_P  (lambda_m_P,     rho_m_P,    Cp_m_P,     Dx, Dt);
-    TPI.assign_coefficients_PC (lambda_m_PC,    rho_m_PC,   Cp_m_PC,    Dx, Dt);
-    TPI.assign_coefficients_R  (lambda_m_R,     rho_m_R,    Cp_m_R,     Dx, Dt);
+    my_temp_iter.assign_coefficients_P  (lambda_m_P,     rho_m_P,    Cp_m_P,     Dx, Dt);
+    my_temp_iter.assign_coefficients_PC (lambda_m_PC,    rho_m_PC,   Cp_m_PC,    Dx, Dt);
+    my_temp_iter.assign_coefficients_R  (lambda_m_R,     rho_m_R,    Cp_m_R,     Dx, Dt);
 
-    TPI.set_ignition_temperature(T_i);
+    my_temp_iter.set_ignition_temperature(T_i);
 
-    TCI.set_coeffs_post_combustion_zone(rho_m_PC, Cp_m_PC, Dt);
-    TCI.set_coeffs_pre_heat_zone(rho_m_P, Cp_m_P, Dt);
-    TCI.set_coeffs_reaction_zone(rho_m_R, Cp_m_R, Dt);
-    
-    TCI.set_conv_rad_properties(19.68 , 0.25, D, T_a);
-    
-    TCI.set_ignition_temperature(T_i);
+    my_temp_iter.set_reaction_term_coeff(rho_Ni, phi * (pow(D_over,3) - pow(D_core, 3)) / pow(D_over, 3), 58.69E-3);
 
-    cout << "Temperature step iterators initialized...\n";
+    my_temp_iter.set_curved_surface_heat_loss(D, 19.0, 0.25, T_a);
+
+    std::cout << "Temperature step iterators initialized...\n";
+
+    reaction_update(omega_arr.begin(), T_data[0].begin()+1, eta_arr.begin(), Dt, omega_arr.end());
 
     for (int n=1; n < MAX_T_STEPS; n++)
     {        
-        vector<float> T_nk, T_hat;
-        T_nk = T_data[n-1];
+        my_temp_iter.setup_banded_matrix(
+            T_data[n].begin() + 1,
+            eta_arr.begin(),
+            omega_arr.begin(),
+            set_BC_X0,
+            set_BC_XN   );
 
-        unsigned int i = 0;
+        vector<float> T_buffer = my_temp_iter.get_solution();
 
-        do
-        {
-            TPI.setup_banded_matrix(T_nk.begin()+1, eta_arr.begin(), &set_BC_X0, &set_BC_XN);
-            T_hat = TPI.get_solution();
+        T_data.push_back(T_buffer.insert(T_buffer.begin(), {T_i}));
 
-            update_eta(eta_arr, T_hat, Dt);
+        reaction_update(omega_arr.begin(), T_data[n+1].begin()+1, eta_arr.begin(), Dt, omega_arr.end());       
 
-            TCI.temperature_update(T_hat.begin(), eta_arr.begin(), T_nk.begin()+1);
-
-            cout << "\tPerformed " << ++i << " iterations under time step " << n << endl;
-
-        } while (!converged(T_hat, T_nk) && i < MAX_ITER_CONV);
-
-        T_data.push_back(T_nk);       
-
-        cout << "Completed " << n << " time steps\n";
+        std::cout << "Completed " << n << " time steps\n";
 
         if (converged(T_data[n-1], T_data[n])) break;
     }
 
-    cout << "Saving to file...\n";
+    std::cout << "Saving to file...\n";
 
     ofstream file(FILENAME);
 
@@ -124,11 +122,11 @@ int main(int argc, char const *argv[])
             file << to_string((*T)) << ',';
         }
 
-        file << endl;        
+        file << std::endl;        
     }
 
     file.close();
-    cout << "Solution saved to file " << FILENAME << endl;
+    std::cout << "Solution saved to file " << FILENAME << std::endl;
 
     return 0;
 }

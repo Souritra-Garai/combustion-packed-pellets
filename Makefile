@@ -25,7 +25,7 @@ $(TARGET) : $(OBJECTS)
 	@echo "\nLinking all...";
 	$(CC) $(OBJECTS) $(CFLAGS) $(LIB) -o $(TARGET)
 
-$(BUILDDIR)/main.o : $(SRCDIR)/main.cpp $(INCDIR)/Kinetics.hpp $(INCDIR)/TDMA_solver.hpp $(INCDIR)/Thermodynamic_Properties.hpp $(INCDIR)/Temperature_Step_Iterator.hpp
+$(BUILDDIR)/main.o : $(SRCDIR)/main.cpp $(INCDIR)/Kinetics.hpp $(INCDIR)/Thermodynamic_Properties.hpp $(INCDIR)/Temperature_Iterator.hpp
 	@mkdir -p $(BUILDDIR);
 	@echo "\nCompiling main...";
 	$(CC) $(CFLAGS) $(INC) -c $(SRCDIR)/main.cpp -o $(BUILDDIR)/main.o
@@ -45,15 +45,16 @@ $(BUILDDIR)/Kinetics.o : $(SRCDIR)/Kinetics.cpp $(INCDIR)/Kinetics.hpp
 	@echo "\nCompiling Kinetics...";
 	$(CC) $(CFLAGS) $(INC) -c $(SRCDIR)/Kinetics.cpp -o $(BUILDDIR)/Kinetics.o
 
-$(BUILDDIR)/Temperature_Iterator.o : $(SRCDIR)/Temperature_Iterator.cpp $(INCDIR)/Temperature_Step_Iterator.hpp
+$(BUILDDIR)/Temperature_Iterator.o : $(SRCDIR)/Temperature_Iterator.cpp $(INCDIR)/Temperature_Iterator.hpp $(INCDIR)/Temperature_Iterator_Base.hpp $(INCDIR)/Kinetics.hpp $(INCDIR)/TDMA_solver.hpp $(INCDIR)/Thermodynamic_Properties.hpp
 	@mkdir -p $(BUILDDIR);
 	@echo "\nCompiling Temperature_Iterator...";
-	$(CC) $(CFLAGS) $(INC) -c $(SRCDIR)/Temperature_Step_Iterator.cpp -o $(BUILDDIR)/Temperature_Step_Iterator.o
+	$(CC) $(CFLAGS) $(INC) -c $(SRCDIR)/Temperature_Iterator.cpp -o $(BUILDDIR)/Temperature_Iterator.o
 
-$(BUILDDIR)/Temperature_Iterator_Base.o : $(SRCDIR)/Temperature_Iterator_Base.cpp $(INCDIR)/Temperature_Step_Iterator.hpp
+$(BUILDDIR)/Temperature_Iterator_Base.o : $(SRCDIR)/Temperature_Iterator_Base.cpp $(INCDIR)/Temperature_Iterator_Base.hpp
 	@mkdir -p $(BUILDDIR);
+	@echo "\nCompiling Temperature_Iterator_Base...";
+	$(CC) $(CFLAGS) $(INC) -c $(SRCDIR)/Temperature_Iterator_Base.cpp -o $(BUILDDIR)/Temperature_Iterator_Base.o
 	
-
 # Builds the example for TDMA solver
 test_TDMA_solver : $(BUILDDIR)/TDMA_example.o $(BUILDDIR)/TDMA_solver.o
 	@echo "\nBuilding TDMA_example...";
