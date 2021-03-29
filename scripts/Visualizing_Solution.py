@@ -20,7 +20,7 @@ x = np.linspace(0, 6.35E-3, M)
 
 t_arr, x_arr = np.meshgrid(t, x, indexing='ij')
 
-# print(t_arr.shape, x_arr.shape, T.shape)
+print(t_arr.shape, x_arr.shape, T.shape)
 
 # Plot the surface.
 surf = ax.plot_surface(t_arr, x_arr, T, cmap='magma')

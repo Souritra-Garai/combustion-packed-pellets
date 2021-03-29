@@ -20,9 +20,9 @@ class Temperature_Iterator
         long double T_atm;
         long double T_final;
 
-        long double rho;
-        long double C_p;
-        long double lambda;
+        long double* rho;
+        long double* C_p;
+        long double* lambda;
 
         long double h_conv;
         long double epsilon;
@@ -39,10 +39,10 @@ class Temperature_Iterator
 
         TDMA_solver::solver SOLVER;
 
-        long double Calc_E();
-        long double Calc_G();
-        long double Calc_F(long double);
-        long double Calc_B(long double);
+        long double Calc_E(unsigned int);
+        long double Calc_G(unsigned int);
+        long double Calc_F(unsigned int, long double);
+        long double Calc_B(unsigned int, long double);
 
         void Reset_Banded_Matrix_Iterators();
         bool In_Range_Banded_Matrix_Iterators();
@@ -58,8 +58,8 @@ class Temperature_Iterator
         void Set_Temperatures               (long double Atmospheric_Temperature, long double Final_Temperature);
         void Set_Time_Step_Length           (long double Dt);
         void Set_Pellet_Dimensions          (long double Length,    long double Diameter);
-        void Set_Thermophysical_Properties  (long double Density,   long double Heat_Capacity,  long double Heat_Diffusivity);
         void Set_Curved_Surface_Heat_Losses (long double Convective_Heat_Transfer_Coefficient,  long double Emissivity);
+        void Set_Thermophysical_Properties  (long double* Density,  long double* Heat_Capacity, long double* Heat_Diffusivity);
 
         void Apply_Initial_Condition(std::vector<long double> Initial_Temperature_Vector);
         

@@ -15,7 +15,7 @@ Temperature_Iterator::Temperature_Iterator(unsigned int n) :
 
     Delta_t = Delta_x = 0;
 
-    rho = C_p = lambda = 0;
+    rho = C_p = lambda = nullptr;
 
     h_conv = epsilon = 0;
     
@@ -27,15 +27,15 @@ Temperature_Iterator::Temperature_Iterator(unsigned int n) :
     T = T_VECTOR.begin();
 }
 
-long double Temperature_Iterator::Calc_E() {return - lambda / (Delta_x * Delta_x);}
-long double Temperature_Iterator::Calc_G() {return - lambda / (Delta_x * Delta_x);}
-long double Temperature_Iterator::Calc_F(long double Temperature)
+long double Temperature_Iterator::Calc_E(unsigned int i) {return - lambda[i] / (Delta_x * Delta_x);}
+long double Temperature_Iterator::Calc_G(unsigned int i) {return - lambda[i] / (Delta_x * Delta_x);}
+long double Temperature_Iterator::Calc_F(unsigned int i, long double Temperature)
 {
-    return (rho / Delta_t) + (2 * lambda / (Delta_x * Delta_x)) + 16 * epsilon * Stefan_Boltzmann_Constant * pow(Temperature, 3) / D + 4 * h_conv / D;
+    return (rho[i] * C_p[i] / Delta_t) + (2 * lambda[i] / (Delta_x * Delta_x)) + 16 * epsilon * Stefan_Boltzmann_Constant * pow(Temperature, 3) / D + 4 * h_conv / D;
 }
-long double Temperature_Iterator::Calc_B(long double Temperature)
+long double Temperature_Iterator::Calc_B(unsigned int i, long double Temperature)
 {
-    return rho * Temperature / Delta_t + 4 * h_conv * T_atm / D + 4 * epsilon * Stefan_Boltzmann_Constant * (3 * pow(Temperature, 4) + pow(T_atm, 4)) / D;
+    return rho[i] * C_p[i] * Temperature / Delta_t + 4 * h_conv * T_atm / D + 4 * epsilon * Stefan_Boltzmann_Constant * (3 * pow(Temperature, 4) + pow(T_atm, 4)) / D;
 }
 
 void Temperature_Iterator::Apply_BC_Banded_Matrix()
@@ -62,10 +62,10 @@ void Temperature_Iterator::Setup_Matrix_Equation()
             In_Range_Banded_Matrix_Iterators();
             Increment_Banded_Matrix_Iterators(), B++, T++   )
     {
-        *E = Calc_E();
-        *G = Calc_G();
-        *F = Calc_F(*T);
-        *B = Calc_B(*T);
+        *E = Calc_E(0);
+        *G = Calc_G(0);
+        *F = Calc_F(0, *T);
+        *B = Calc_B(0, *T);
     }
 
     Apply_BC_Banded_Matrix();
@@ -84,7 +84,7 @@ void Temperature_Iterator::Set_Pellet_Dimensions(long double Length, long double
     Delta_x = L / (N-1);
 }
 
-void Temperature_Iterator::Set_Thermophysical_Properties(long double Density, long double Heat_Capacity, long double Heat_Diffusivity)
+void Temperature_Iterator::Set_Thermophysical_Properties(long double* Density, long double* Heat_Capacity, long double* Heat_Diffusivity)
 {
     rho     = Density;
     C_p     = Heat_Capacity;
@@ -127,3 +127,4 @@ void Temperature_Iterator::Set_Curved_Surface_Heat_Losses(long double Convective
     h_conv = Convective_Heat_Transfer_Coefficient;
     epsilon = Emissivity;
 }
+

@@ -9,10 +9,10 @@
 
 #define N   1000
 
-#define L   1.0 // m
-#define D   1.0 // m
+#define L   6.35E-3 // m
+#define D   6.35E-5 // m
 
-#define Dt  1E-5    // s
+#define Dt  1E-4    // s
 #define Dx  L/N     // m
 
 #define T_atm   298.0   // K
@@ -33,17 +33,25 @@ int main(int argc, char** argv)
 {
     // Finding the mean thermophysical properties for diffrent zones
     // Pre heat zone
-    float lambda_m_P    = calc_lambda_m(phi, alpha, lambda_p_P, lambda_Ar_P);
-    float lambda_m_PC   = calc_lambda_m(phi, alpha, lambda_NiAl_PC, lambda_Ar_PC);
-    float lambda_m_R    = calc_lambda_m(phi, alpha, 0.5*(lambda_p_R + lambda_NiAl_R), lambda_Ar_R);
+    long double lambda_m[3] = {
+        calc_lambda_m(phi, alpha, lambda_p_P, lambda_Ar_P),
+        calc_lambda_m(phi, alpha, 0.5*(lambda_p_R + lambda_NiAl_R), lambda_Ar_R),
+        calc_lambda_m(phi, alpha, lambda_NiAl_PC, lambda_Ar_PC)
+    };
+    
     // Post combustion zone
-    float rho_m_P   = calc_rho_m(phi, rho_p_P, rho_Ar_P);
-    float rho_m_PC  = calc_rho_m(phi, rho_NiAl_PC, rho_Ar_PC);
-    float rho_m_R   = calc_rho_m(phi, 0.5*(rho_p_R + rho_NiAl_R), rho_Ar_R);
+    long double rho_m[3] = {
+        calc_rho_m(phi, rho_p_P, rho_Ar_P),
+        calc_rho_m(phi, 0.5*(rho_p_R + rho_NiAl_R), rho_Ar_R),
+        calc_rho_m(phi, rho_NiAl_PC, rho_Ar_PC)
+    };
+    
     // Reaction zone
-    float Cp_m_P    = calc_Cp_m(phi, rho_p_P, rho_Ar_P, Cp_p_P, Cp_Ar_P);
-    float Cp_m_R    = calc_Cp_m(phi, 0.5*(rho_p_R + rho_NiAl_R), rho_Ar_R, 0.5*(Cp_p_R + Cp_NiAl_R), Cp_Ar_R);
-    float Cp_m_PC   = calc_Cp_m(phi, rho_NiAl_PC, rho_Ar_PC, Cp_NiAl_PC, Cp_Ar_PC);
+    long double Cp_m[3] = {
+        calc_Cp_m(phi, rho_p_P, rho_Ar_P, Cp_p_P, Cp_Ar_P),
+        calc_Cp_m(phi, 0.5*(rho_p_R + rho_NiAl_R), rho_Ar_R, 0.5*(Cp_p_R + Cp_NiAl_R), Cp_Ar_R),
+        calc_Cp_m(phi, rho_NiAl_PC, rho_Ar_PC, Cp_NiAl_PC, Cp_Ar_PC)
+    };
     
     std::cout << "Setting up solver..." << std::endl;
 
@@ -52,7 +60,7 @@ int main(int argc, char** argv)
     TI.Set_Temperatures(T_atm, T_f);
     TI.Set_Time_Step_Length(Dt);
     TI.Set_Pellet_Dimensions(L, D);
-    TI.Set_Thermophysical_Properties(rho_m_R, Cp_m_R, lambda_m_R);
+    TI.Set_Thermophysical_Properties(rho_m, Cp_m, lambda_m);
     TI.Set_Curved_Surface_Heat_Losses(19.68, 0.25);
 
     TI.Apply_Initial_Condition(T_MATRIX[0]);
