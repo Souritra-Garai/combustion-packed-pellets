@@ -3,7 +3,7 @@
 #include <iostream>
 
 Temperature_Iterator::Temperature_Iterator(unsigned int n) :
-    T_VECTOR(n, 0),
+    T_VECTOR(n, 0), ETA_VECTOR(n, 0), OMEGA_VECTOR(n, 0),
     E_VECTOR(n, 0), F_VECTOR(n, 0), G_VECTOR(n, 0), B_VECTOR(n, 0),
     SOLVER(n)
 {
@@ -11,20 +11,13 @@ Temperature_Iterator::Temperature_Iterator(unsigned int n) :
 
     L = D = 0;
 
-    T_atm = T_final = 0;
+    T_atm = T_ign = T_final = 0;
 
     Delta_t = Delta_x = 0;
 
     rho = C_p = lambda = nullptr;
 
     h_conv = epsilon = 0;
-    
-    E = E_VECTOR.begin();
-    F = F_VECTOR.begin();
-    G = G_VECTOR.begin();
-    B = B_VECTOR.begin();
-
-    T = T_VECTOR.begin();
 }
 
 long double Temperature_Iterator::Calc_E(unsigned int i) {return - lambda[i] / (Delta_x * Delta_x);}
@@ -58,9 +51,29 @@ void Temperature_Iterator::Apply_BC_B_Vector()
 
 void Temperature_Iterator::Setup_Matrix_Equation()
 {
-    for (   Reset_Banded_Matrix_Iterators(), B = B_VECTOR.begin(), T = T_VECTOR.begin();
+    for (   Reset_Banded_Matrix_Iterators(), B = B_VECTOR.begin(), T = T_VECTOR.begin(), ETA = ETA_VECTOR.begin(), OMEGA = OMEGA_VECTOR.begin();
+            In_Range_Banded_Matrix_Iterators() && In_Post_Combustion_Zone(*ETA);
+            Increment_Banded_Matrix_Iterators(), B++, T++, ETA++, OMEGA++   )
+    {
+        *E = Calc_E(2);
+        *G = Calc_G(2);
+        *F = Calc_F(2, *T);
+        *B = Calc_B(2, *T);
+    }
+
+    for (   ;
+            In_Range_Banded_Matrix_Iterators() && In_Reaction_Zone(*T);
+            Increment_Banded_Matrix_Iterators(), B++, T++, ETA++, OMEGA++   )
+    {
+        *E = Calc_E(1);
+        *G = Calc_G(1);
+        *F = Calc_F(1, *T);
+        *B = Calc_B(1, *T);
+    }
+
+    for (   ;
             In_Range_Banded_Matrix_Iterators();
-            Increment_Banded_Matrix_Iterators(), B++, T++   )
+            Increment_Banded_Matrix_Iterators(), B++, T++, ETA++, OMEGA++   )
     {
         *E = Calc_E(0);
         *G = Calc_G(0);
@@ -73,6 +86,10 @@ void Temperature_Iterator::Setup_Matrix_Equation()
 
     SOLVER.setup_banded_matrix(E_VECTOR, F_VECTOR, G_VECTOR);
 }
+
+bool Temperature_Iterator::In_Reaction_Zone(long double Temperature) {return Temperature > T_ign;}
+
+bool Temperature_Iterator::In_Post_Combustion_Zone(long double Conversion) {return Conversion > 1 - 0.00001;}
 
 void Temperature_Iterator::Set_Time_Step_Length(long double Dt) {Delta_t = Dt;}
 
@@ -111,15 +128,23 @@ std::vector<long double> Temperature_Iterator::Get_Solution()
     return New_T_Vector;
 }
 
-void Temperature_Iterator::Set_Temperatures(long double Atmospheric_Temperature, long double Final_Temperature)
+void Temperature_Iterator::Set_Temperatures(long double Atmospheric_Temperature, long double Final_Temperature, long double Ignition_Temperature)
 {
     T_atm   = Atmospheric_Temperature;
+    T_ign   = Ignition_Temperature;
     T_final = Final_Temperature;
 }
 
 void Temperature_Iterator::Apply_Initial_Condition(std::vector<long double> T_INITIAL_VECTOR)
 {
     std::copy(T_INITIAL_VECTOR.begin(), T_INITIAL_VECTOR.end(), T_VECTOR.begin());
+
+    for (   T = T_VECTOR.begin(), ETA = ETA_VECTOR.begin(), OMEGA = OMEGA_VECTOR.begin();
+            T < T_VECTOR.end();
+            T++, ETA++, OMEGA++ )
+    {
+        *OMEGA = calc_conversion_rate(*ETA, *T);
+    }
 }
 
 void Temperature_Iterator::Set_Curved_Surface_Heat_Losses(long double Convective_Heat_Transfer_Coefficient, long double Emissivity)
@@ -128,3 +153,18 @@ void Temperature_Iterator::Set_Curved_Surface_Heat_Losses(long double Convective
     epsilon = Emissivity;
 }
 
+void Temperature_Iterator::Update_Reaction_Zone()
+{
+    for (   T = T_VECTOR.begin(), ETA = ETA_VECTOR.begin(), OMEGA = OMEGA_VECTOR.begin();
+            T < T_VECTOR.end() && In_Post_Combustion_Zone(*ETA);
+            T++, ETA++, OMEGA++ )   ;
+
+    for (   ;
+            T < T_VECTOR.end() && In_Reaction_Zone(*T);
+            T++, ETA++, OMEGA++ )
+    {
+        *OMEGA  = omega_update  (*OMEGA, *T,  *ETA, Delta_t);
+        *ETA    = eta_update    (*OMEGA, *ETA, Delta_t);
+    }
+
+}

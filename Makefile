@@ -30,7 +30,7 @@ $(BUILDDIR)/main.o : $(SRCDIR)/main.cpp $(INCDIR)/Temperature_Iterator.hpp $(INC
 	@echo "\nCompiling main...";
 	$(CC) $(CFLAGS) $(INC) -c $(SRCDIR)/main.cpp -o $(BUILDDIR)/main.o
 
-$(BUILDDIR)/Temperature_Iterator.o : $(SRCDIR)/Temperature_Iterator.cpp $(INCDIR)/Temperature_Iterator.hpp $(INCDIR)/TDMA_solver.hpp
+$(BUILDDIR)/Temperature_Iterator.o : $(SRCDIR)/Temperature_Iterator.cpp $(INCDIR)/Temperature_Iterator.hpp $(INCDIR)/TDMA_solver.hpp $(INCDIR)/Kinetics.hpp
 	@mkdir -p $(BUILDDIR);
 	@echo "\nCompiling Temperature_Iterator...";
 	$(CC) $(CFLAGS) $(INC) -c $(SRCDIR)/Temperature_Iterator.cpp -o $(BUILDDIR)/Temperature_Iterator.o
@@ -44,6 +44,11 @@ $(BUILDDIR)/Thermodynamic_Properties.o : $(SRCDIR)/Thermodynamic_Properties.cpp 
 	@mkdir -p $(BUILDDIR);
 	@echo "\nCompiling Thermodynamic_Properties...";
 	$(CC) $(CFLAGS) $(INC) -c $(SRCDIR)/Thermodynamic_Properties.cpp -o $(BUILDDIR)/Thermodynamic_Properties.o
+
+$(BUILDDIR)/Kinetics.o : $(SRCDIR)/Kinetics.cpp $(INCDIR)/Kinetics.hpp
+	@mkdir -p $(BUILDDIR);
+	@echo "\nCompiling Kinetics...";
+	$(CC) $(CFLAGS) $(INC) -c $(SRCDIR)/Kinetics.cpp -o $(BUILDDIR)/Kinetics.o
 
 clean:
 	@echo "\nCleaning..."; 

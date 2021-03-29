@@ -16,6 +16,7 @@
 #define Dx  L/N     // m
 
 #define T_atm   298.0   // K
+#define T_i     933.0   // K
 #define T_f     1911.0  // K
 
 #define phi     0.5
@@ -57,7 +58,7 @@ int main(int argc, char** argv)
 
     T_MATRIX[0][0] = T_f;
 
-    TI.Set_Temperatures(T_atm, T_f);
+    TI.Set_Temperatures(T_atm, T_f, T_i);
     TI.Set_Time_Step_Length(Dt);
     TI.Set_Pellet_Dimensions(L, D);
     TI.Set_Thermophysical_Properties(rho_m, Cp_m, lambda_m);
@@ -76,6 +77,8 @@ int main(int argc, char** argv)
         TI.Setup_Matrix_Equation();
         
         auto T_VECTOR = TI.Get_Solution();
+
+        TI.Update_Reaction_Zone();
 
         T_MATRIX.push_back(T_VECTOR);
 
@@ -112,14 +115,15 @@ bool is_close(long double a, long double b)
     else return false;
 }
 
-bool has_converged(std::vector<long double> VECTOR_A, std::vector<long double> VECTOR_B)
+bool has_converged(std::vector<long double> VECTOR_X, std::vector<long double> VECTOR_Y)
 {
     bool flag = true;
-    std::vector<long double>::iterator A, B;
+    std::vector<long double>::iterator X, Y;
     
-    for (A = VECTOR_A.begin(), B = VECTOR_B.begin(); A < VECTOR_A.end() && flag; A++, B++)
+    for (X = VECTOR_X.begin(), Y = VECTOR_Y.begin(); X < VECTOR_X.end() && flag; X++, Y++)
 
-        flag = is_close(*A, *B);
+        flag = is_close(*X, *Y);
 
     return flag;
 }
+

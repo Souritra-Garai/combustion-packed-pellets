@@ -10,18 +10,20 @@
 #define E_a     448.4E3
 #define DH_r    -50E3
 
-std::pair<float, float> calc_reaction_terms(float eta, float omega, float T, float Delta_t);
+std::pair<long double, long double> calc_reaction_terms(long double eta, long double omega, long double T, long double Delta_t);
 
-float omega_update(float omega_prev, float temperature, float eta, float Delta_t);
+long double omega_update(long double omega_prev, long double temperature, long double eta, long double Delta_t);
 
-float eta_update(float omega, float eta_prev, float Delta_t);
+long double eta_update(long double omega, long double eta_prev, long double Delta_t);
 
 void reaction_update(
-    std::vector<float>::iterator omega_prev,
-    std::vector<float>::iterator temperature,
-    std::vector<float>::iterator eta,
-    float Delta_t,
-    std::vector<float>::iterator omega_arr_end
+    std::vector<long double>::iterator omega_prev,
+    std::vector<long double>::iterator temperature,
+    std::vector<long double>::iterator eta,
+    long double Delta_t,
+    std::vector<long double>::iterator omega_arr_end
     );
+
+long double calc_conversion_rate(long double conversion, long double temperature);
 
 #endif

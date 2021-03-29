@@ -2,6 +2,7 @@
 #include <math.h>
 
 #include "TDMA_solver.hpp"
+#include "Kinetics.hpp"
 
 #define Stefan_Boltzmann_Constant 5.670374419E-8
 
@@ -18,6 +19,7 @@ class Temperature_Iterator
         long double Delta_x;
 
         long double T_atm;
+        long double T_ign;
         long double T_final;
 
         long double* rho;
@@ -29,6 +31,12 @@ class Temperature_Iterator
 
         std::vector<long double> T_VECTOR;
         std::vector<long double>::iterator T;
+
+        std::vector<long double> ETA_VECTOR;
+        std::vector<long double>::iterator ETA;
+
+        std::vector<long double> OMEGA_VECTOR;
+        std::vector<long double>::iterator OMEGA;
 
         std::vector<long double> E_VECTOR;
         std::vector<long double> F_VECTOR;
@@ -48,6 +56,9 @@ class Temperature_Iterator
         bool In_Range_Banded_Matrix_Iterators();
         void Increment_Banded_Matrix_Iterators();
 
+        bool In_Reaction_Zone(long double);
+        bool In_Post_Combustion_Zone(long double);
+
         void Apply_BC_Banded_Matrix();
         void Apply_BC_B_Vector();
 
@@ -55,15 +66,16 @@ class Temperature_Iterator
         
         Temperature_Iterator(unsigned int N);
 
-        void Set_Temperatures               (long double Atmospheric_Temperature, long double Final_Temperature);
+        void Set_Temperatures               (long double Atmospheric_Temperature, long double Final_Temperature, long double Ignition_Temperature);
         void Set_Time_Step_Length           (long double Dt);
-        void Set_Pellet_Dimensions          (long double Length,    long double Diameter);
-        void Set_Curved_Surface_Heat_Losses (long double Convective_Heat_Transfer_Coefficient,  long double Emissivity);
-        void Set_Thermophysical_Properties  (long double* Density,  long double* Heat_Capacity, long double* Heat_Diffusivity);
+        void Set_Pellet_Dimensions          (long double Length, long double Diameter);
+        void Set_Curved_Surface_Heat_Losses (long double Convective_Heat_Transfer_Coefficient, long double Emissivity);
+        void Set_Thermophysical_Properties  (long double* Density, long double* Heat_Capacity, long double* Heat_Diffusivity);
 
         void Apply_Initial_Condition(std::vector<long double> Initial_Temperature_Vector);
         
         void Setup_Matrix_Equation();
         
         std::vector<long double> Get_Solution();
+        void Update_Reaction_Zone();
 };
