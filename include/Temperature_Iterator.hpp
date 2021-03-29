@@ -1,70 +1,69 @@
-#ifndef __TEMP_ITER__
-#define __TEMP_ITER__
-
 #include <vector>
 #include <math.h>
 
-#include "Kinetics.hpp"
 #include "TDMA_solver.hpp"
-#include "Thermodynamic_Properties.hpp"
-#include "Temperature_Iterator_Base.hpp"
 
-using namespace std;
+#define Stefan_Boltzmann_Constant 5.670374419E-8
 
-class Temperature_Iterator: public Temperature_Iterator_Base
+class Temperature_Iterator
 {
     private:
 
-        float Delta_t;
+        unsigned int N;
 
-        float e_P, e_R, e_PC;
-        float g_P, g_R, g_PC;
-        float f_0_P, f_0_R, f_0_PC;
-        float b_1_P, b_1_R, b_1_PC;
-        
-        float b_0, b_4, f_3;
-        float reaction_term_coeff;
+        long double L;
+        long double D;
 
-        vector<float> E_arr, F_arr, G_arr, B_arr;
-        vector<float>::iterator E, F, G, B;
+        long double Delta_t;
+        long double Delta_x;
 
-        TDMA_solver::solver my_solver;
+        long double T_atm;
+        long double T_final;
 
-    protected:
+        long double rho;
+        long double C_p;
+        long double lambda;
 
-        void reset_other_iterators();    
-        void increment_other_iterators();
-                
-        float calc_e(float lambda, float Delta_x);
-        float calc_g(float lambda, float Delta_x);
-        float calc_f(float lambda, float rho, float Cp, float Delta_x, float Delta_t);
-        float calc_b_1(float rho, float Cp, float Dt);
-    
+        long double h_conv;
+        long double epsilon;
+
+        std::vector<long double> T_VECTOR;
+        std::vector<long double>::iterator T;
+
+        std::vector<long double> E_VECTOR;
+        std::vector<long double> F_VECTOR;
+        std::vector<long double> G_VECTOR;
+        std::vector<long double> B_VECTOR;
+
+        std::vector<long double>::iterator E, F, G, B;
+
+        TDMA_solver::solver SOLVER;
+
+        long double Calc_E();
+        long double Calc_G();
+        long double Calc_F(long double);
+        long double Calc_B(long double);
+
+        void Reset_Banded_Matrix_Iterators();
+        bool In_Range_Banded_Matrix_Iterators();
+        void Increment_Banded_Matrix_Iterators();
+
+        void Apply_BC_Banded_Matrix();
+        void Apply_BC_B_Vector();
+
     public:
+        
+        Temperature_Iterator(unsigned int N);
 
-        Temperature_Iterator(unsigned int n, float delta_t);
+        void Set_Temperatures               (long double Atmospheric_Temperature, long double Final_Temperature);
+        void Set_Time_Step_Length           (long double Dt);
+        void Set_Pellet_Dimensions          (long double Length,    long double Diameter);
+        void Set_Thermophysical_Properties  (long double Density,   long double Heat_Capacity,  long double Heat_Diffusivity);
+        void Set_Curved_Surface_Heat_Losses (long double Convective_Heat_Transfer_Coefficient,  long double Emissivity);
 
-        void assign_coefficients_P  (float lambda, float rho, float Cp, float Delta_x);
-        void assign_coefficients_R  (float lambda, float rho, float Cp, float Delta_x);
-        void assign_coefficients_PC (float lambda, float rho, float Cp, float Delta_x);
-
-        void set_reaction_term_coeff (float density, float volume_fraction, float mol_wt);
-
-        void set_curved_surface_heat_loss(
-            float diameter,
-            float convective_heat_transfer_coeff,
-            float emmisivity,
-            float T_atmosphere  );
-
-        void setup_banded_matrix(
-            vector<float>::iterator T,
-            vector<float>::iterator eta,
-            vector<float>::iterator omega,
-            void (*set_BC_X0)(float &e, float &f, float &g, float &b),
-            void (*set_BC_XN)(float &e, float &f, float &g, float &b)
-        );
-
-        vector<float> get_solution();
+        void Apply_Initial_Condition(std::vector<long double> Initial_Temperature_Vector);
+        
+        void Setup_Matrix_Equation();
+        
+        std::vector<long double> Get_Solution();
 };
-
-#endif

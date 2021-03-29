@@ -6,11 +6,11 @@
 
 #define R 8.314
 
-#define A       2.215E25
+#define A       0 // 2.215E25
 #define E_a     448.4E3
 #define DH_r    -50E3
 
-std::pair<float, float> reaction_term(float eta, float omega, float T, float Delta_t);
+std::pair<float, float> calc_reaction_terms(float eta, float omega, float T, float Delta_t);
 
 float omega_update(float omega_prev, float temperature, float eta, float Delta_t);
 

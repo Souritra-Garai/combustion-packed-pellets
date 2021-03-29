@@ -1,149 +1,129 @@
 #include "Temperature_Iterator.hpp"
 
-// Function declarations for class Temperature Predictor Step Iterator
+#include <iostream>
 
-Temperature_Iterator::Temperature_Iterator(unsigned int n, float del_t): 
-    E_arr(n,0),
-    F_arr(n,0),
-    G_arr(n,0),
-    B_arr(n,0), 
-    my_solver(n),
-    Temperature_Iterator_Base(n)
+Temperature_Iterator::Temperature_Iterator(unsigned int n) :
+    T_VECTOR(n, 0),
+    E_VECTOR(n, 0), F_VECTOR(n, 0), G_VECTOR(n, 0), B_VECTOR(n, 0),
+    SOLVER(n)
 {
-    Delta_t = del_t;
+    N = n;
 
-    e_P = e_R = e_PC = 0;
-    f_0_P = f_0_R = f_0_PC = 0;
-    g_P = g_R = g_PC = 0;
+    L = D = 0;
 
-    b_1_P = b_1_R = b_1_PC = 0;
-    b_0 = 0;
+    T_atm = T_final = 0;
 
-    reaction_term_coeff = 0;
+    Delta_t = Delta_x = 0;
 
-    reset_iterators();
-}
+    rho = C_p = lambda = 0;
 
-void Temperature_Iterator::reset_other_iterators()
-{
-    E = E_arr.begin();
-    F = F_arr.begin();
-    G = G_arr.begin();
-    B = B_arr.begin();
-}
-
-void Temperature_Iterator::increment_other_iterators()
-{
-    E++;
-    F++;
-    G++;
-    B++;
-}
-
-void Temperature_Iterator::setup_banded_matrix(   
-    vector<float>::iterator T, 
-    vector<float>::iterator eta,
-    vector<float>::iterator omega,
-    void (*set_BC_X0)(float &e, float &f, float &g, float &b),
-    void (*set_BC_XN)(float &e, float &f, float &g, float &b)    )
-{
-    for (reset_iterators(); in_post_combustion_zone(*eta); increment_iterators(T, eta, omega))
-    {
-        *E = e_PC;
-        *G = g_PC;
-
-        *F = f_0_PC + f_3 * pow(*T, 3);
-
-        *B = b_0 + b_1_PC * (*T) + b_4 * pow(*T, 4);
-    }
-
-    for (; in_reaction_zone(*T); increment_iterators(T, eta, omega))
-    {
-        *E = e_R;
-        *G = g_R;
-
-        pair<float, float> reaction_terms = reaction_term(*eta, *omega, *T, Delta_t);
-
-        *F = f_0_R + f_3 * pow(*T, 3) - reaction_term_coeff * reaction_terms.second;
-
-        *B = b_0 + b_1_R * (*T) + b_4 * pow(*T, 4) + reaction_term_coeff * reaction_terms.first;
-    }
+    h_conv = epsilon = 0;
     
-    for (; iterators_in_range(); increment_iterators(T))
+    E = E_VECTOR.begin();
+    F = F_VECTOR.begin();
+    G = G_VECTOR.begin();
+    B = B_VECTOR.begin();
+
+    T = T_VECTOR.begin();
+}
+
+long double Temperature_Iterator::Calc_E() {return - lambda / (Delta_x * Delta_x);}
+long double Temperature_Iterator::Calc_G() {return - lambda / (Delta_x * Delta_x);}
+long double Temperature_Iterator::Calc_F(long double Temperature)
+{
+    return (rho / Delta_t) + (2 * lambda / (Delta_x * Delta_x)) + 16 * epsilon * Stefan_Boltzmann_Constant * pow(Temperature, 3) / D + 4 * h_conv / D;
+}
+long double Temperature_Iterator::Calc_B(long double Temperature)
+{
+    return rho * Temperature / Delta_t + 4 * h_conv * T_atm / D + 4 * epsilon * Stefan_Boltzmann_Constant * (3 * pow(Temperature, 4) + pow(T_atm, 4)) / D;
+}
+
+void Temperature_Iterator::Apply_BC_Banded_Matrix()
+{
+    // Boundary Condition at x = 0
+    F_VECTOR[0] += E_VECTOR[0] + 4 * epsilon * Stefan_Boltzmann_Constant * pow(T_VECTOR[0], 3) / Delta_x + h_conv / Delta_x;
+
+    // Boundary Condition at x = L
+    F_VECTOR[N-1] += G_VECTOR[N-1] + 4 * epsilon * Stefan_Boltzmann_Constant * pow(T_VECTOR[N-1], 3) / Delta_x + h_conv / Delta_x;
+}
+
+void Temperature_Iterator::Apply_BC_B_Vector()
+{
+    // Boundary Condition at x = 0
+    B_VECTOR[0] += h_conv * T_atm / Delta_x + epsilon * Stefan_Boltzmann_Constant * (3 * pow(T_VECTOR[0], 4) + pow(T_atm, 4)) / Delta_x;
+
+    // Boundary Condition at x = L
+    B_VECTOR[N-1] += h_conv * T_atm / Delta_x + epsilon * Stefan_Boltzmann_Constant * (3 * pow(T_VECTOR[N-1], 4) + pow(T_atm, 4)) / Delta_x;
+}
+
+void Temperature_Iterator::Setup_Matrix_Equation()
+{
+    for (   Reset_Banded_Matrix_Iterators(), B = B_VECTOR.begin(), T = T_VECTOR.begin();
+            In_Range_Banded_Matrix_Iterators();
+            Increment_Banded_Matrix_Iterators(), B++, T++   )
     {
-        *E = e_P;
-        *G = g_P;
-
-        *F = f_0_P + f_3 * pow(*T, 3);
-
-        *B = b_0 + b_1_P * (*T) + b_4 * pow(*T, 4);
+        *E = Calc_E();
+        *G = Calc_G();
+        *F = Calc_F(*T);
+        *B = Calc_B(*T);
     }
 
-    set_BC_X0(E_arr[0], F_arr[0], G_arr[0], B_arr[0]);
-    set_BC_XN(E_arr[N-1], F_arr[N-1], G_arr[N-1], B_arr[N-1]);
+    Apply_BC_Banded_Matrix();
+    Apply_BC_B_Vector();
 
-    my_solver.setup_banded_matrix(E_arr, F_arr, G_arr);
+    SOLVER.setup_banded_matrix(E_VECTOR, F_VECTOR, G_VECTOR);
 }
 
-vector<float> Temperature_Iterator::get_solution()
+void Temperature_Iterator::Set_Time_Step_Length(long double Dt) {Delta_t = Dt;}
+
+void Temperature_Iterator::Set_Pellet_Dimensions(long double Length, long double Diameter)
 {
-    return my_solver.solve(B_arr);
+    L = Length;
+    D = Diameter;
+
+    Delta_x = L / (N-1);
 }
 
-void Temperature_Iterator::assign_coefficients_P  (float lambda, float rho, float Cp, float Delta_x)
+void Temperature_Iterator::Set_Thermophysical_Properties(long double Density, long double Heat_Capacity, long double Heat_Diffusivity)
 {
-    e_P = calc_e(lambda, Delta_x);
-    g_P = calc_g(lambda, Delta_x);
-
-    f_0_P = calc_f(lambda, rho, Cp, Delta_x, Delta_t);
-
-    b_1_P = calc_b_1(rho, Cp, Delta_t);
+    rho     = Density;
+    C_p     = Heat_Capacity;
+    lambda  = Heat_Diffusivity;
 }
 
-void Temperature_Iterator::assign_coefficients_PC (float lambda, float rho, float Cp, float Delta_x)
+void Temperature_Iterator::Reset_Banded_Matrix_Iterators()
 {
-    e_PC = calc_e(lambda, Delta_x);
-    g_PC = calc_g(lambda, Delta_x);
-
-    f_0_PC = calc_f(lambda, rho, Cp, Delta_x, Delta_t);
-
-    b_1_PC = calc_b_1(rho, Cp, Delta_t);
+    E = E_VECTOR.begin();
+    F = F_VECTOR.begin();
+    G = G_VECTOR.begin();
 }
 
-void Temperature_Iterator::assign_coefficients_R  (float lambda, float rho, float Cp, float Delta_x)
+bool Temperature_Iterator::In_Range_Banded_Matrix_Iterators() {return E < E_VECTOR.end();}
+
+void Temperature_Iterator::Increment_Banded_Matrix_Iterators() {E++; F++; G++;}
+
+std::vector<long double> Temperature_Iterator::Get_Solution()
 {
-    e_R = calc_e(lambda, Delta_x);
-    g_R = calc_g(lambda, Delta_x);
+    std::vector<long double> New_T_Vector = SOLVER.solve(B_VECTOR);
 
-    f_0_R = calc_f(lambda, rho, Cp, Delta_x, Delta_t);
+    std::copy(New_T_Vector.begin(), New_T_Vector.end(), T_VECTOR.begin());
 
-    b_1_R = calc_b_1(rho, Cp, Delta_t);
+    return New_T_Vector;
 }
 
-float Temperature_Iterator::calc_e(float lambda, float Delta_x) {return - lambda / (Delta_x * Delta_x);}
-float Temperature_Iterator::calc_g(float lambda, float Delta_x) {return - lambda / (Delta_x * Delta_x);}
-
-float Temperature_Iterator::calc_b_1(float rho, float Cp, float Delta_t) {return rho * Cp / Delta_t;}
-
-float Temperature_Iterator::calc_f(float lambda, float rho, float Cp, float Delta_x, float Delta_t)
+void Temperature_Iterator::Set_Temperatures(long double Atmospheric_Temperature, long double Final_Temperature)
 {
-    return  (2 * lambda / (Delta_x * Delta_x)) + (rho * Cp / Delta_t);
+    T_atm   = Atmospheric_Temperature;
+    T_final = Final_Temperature;
 }
 
-void Temperature_Iterator::set_curved_surface_heat_loss(float Dia, float h_CSA, float epsi, float T_atmos)
+void Temperature_Iterator::Apply_Initial_Condition(std::vector<long double> T_INITIAL_VECTOR)
 {
-    b_0 = 4 * (h_CSA * T_atmos + epsi * Stefan_Boltzmann_constant * pow(T_atmos, 4)) / Dia;
-
-    b_4 = 4 * 3 * epsi * Stefan_Boltzmann_constant / Dia;
-
-    f_3 = 4 * 4 * epsi * Stefan_Boltzmann_constant / Dia;
-
-    f_0_P  += 4 * h_CSA / Dia;
-    f_0_R  += 4 * h_CSA / Dia;
-    f_0_PC += 4 * h_CSA / Dia;
+    std::copy(T_INITIAL_VECTOR.begin(), T_INITIAL_VECTOR.end(), T_VECTOR.begin());
 }
 
-void Temperature_Iterator::set_reaction_term_coeff(float density, float volume_fraction, float mol_wt)
+void Temperature_Iterator::Set_Curved_Surface_Heat_Losses(long double Convective_Heat_Transfer_Coefficient, long double Emissivity)
 {
-    reaction_term_coeff = volume_fraction * density / mol_wt;
+    h_conv = Convective_Heat_Transfer_Coefficient;
+    epsilon = Emissivity;
 }

@@ -44,7 +44,7 @@
 // alpha_p_ME - volume fraction of packed particles in Maxwell - Eucken structure
 // lambda_p - thermal conductivity of particles
 // lambda_f - thermal conductivity of fluid
-float calc_lambda_m(float phi_p, float alpha_p_ME, float lambda_p, float lambda_f);
+long double calc_lambda_m(long double phi_p, long double alpha_p_ME, long double lambda_p, long double lambda_f);
 
 // Calculates specific heat capacity of packed particles
 // and fluid mixture (Ref. Section 3.3.1)
@@ -53,13 +53,13 @@ float calc_lambda_m(float phi_p, float alpha_p_ME, float lambda_p, float lambda_
 // rho_f - density of fluid
 // Cp_p - specific heat capacity of particles
 // Cp_f - specific heat capacity of fluid
-float calc_Cp_m(float phi_p, float rho_p, float rho_f, float Cp_p, float Cp_f);
+long double calc_Cp_m(long double phi_p, long double rho_p, long double rho_f, long double Cp_p, long double Cp_f);
 
 // Calculates density of packed particles and fluid
 // mixture (Ref. Section 3.2.1)
 // phi_p - volume fraction of packed particles
 // rho_p - density of packed particles
 // rho_f - density of fluid
-float calc_rho_m(float phi_p, float rho_p, float rho_f);
+long double calc_rho_m(long double phi_p, long double rho_p, long double rho_f);
 
 #endif

@@ -18,7 +18,7 @@ solver::solver(int m)
     ready_to_solve = false;
 }
 
-void solver::LU_Decomposition( vector<float> E, vector<float> F, vector<float> G)
+void solver::LU_Decomposition( std::vector<long double> E, std::vector<long double> F, std::vector<long double> G)
 {
     Upper_Matrix_Diagonal[0] = F[0];
     Upper_Matrix_Diagonal_plus_1[0] = G[0];
@@ -33,9 +33,9 @@ void solver::LU_Decomposition( vector<float> E, vector<float> F, vector<float> G
     }
 }
 
-void solver::setup_banded_matrix(   vector<float> E,
-                                    vector<float> F,
-                                    vector<float> G   )
+void solver::setup_banded_matrix(   std::vector<long double> E,
+                                    std::vector<long double> F,
+                                    std::vector<long double> G   )
 {
     if (E.size() != n) throw "Size of E must be equal to n";
     if (F.size() != n) throw "Size of F must be equal to n";
@@ -52,9 +52,9 @@ void solver::setup_banded_matrix(   vector<float> E,
     ready_to_solve = true;    
 }
 
-vector<float> solver::solve_Ldb(vector<float> b)
+std::vector<long double> solver::solve_Ldb(std::vector<long double> b)
 {
-    vector<float> d(n, 0.0);
+    std::vector<long double> d(n, 0.0);
 
     d[0] = b[0];
 
@@ -65,9 +65,9 @@ vector<float> solver::solve_Ldb(vector<float> b)
     return d;
 }
 
-vector<float> solver::solve_Uxd(vector<float> d)
+std::vector<long double> solver::solve_Uxd(std::vector<long double> d)
 {
-    vector<float> x(n, 0.0);
+    std::vector<long double> x(n, 0.0);
 
     x[n-1] = d[n-1] / Upper_Matrix_Diagonal[n-1];
 
@@ -78,7 +78,7 @@ vector<float> solver::solve_Uxd(vector<float> d)
     return x;    
 }
 
-vector<float> solver::solve(vector<float> b)
+std::vector<long double> solver::solve(std::vector<long double> b)
 {
     if (b.size() != n) throw "Size of b must be equal to n";
 
@@ -87,9 +87,9 @@ vector<float> solver::solve(vector<float> b)
     return solve_Uxd(solve_Ldb(b));
 }
 
-vector<vector<float>> solver::solve(vector<vector<float>> B)
+std::vector<std::vector<long double>> solver::solve(std::vector<std::vector<long double>> B)
 {
-    vector<vector<float>> X(B.size(), vector<float>(n, 0.0));
+    std::vector<std::vector<long double>> X(B.size(), std::vector<long double>(n, 0.0));
 
     #pragma omp parallel for schedule(static) default(none) shared(B, X)
 

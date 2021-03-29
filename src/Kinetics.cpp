@@ -1,6 +1,6 @@
 #include "Kinetics.hpp"
 
-std::pair<float, float> reaction_term(float eta, float omega, float T, float Delta_t)
+std::pair<float, float> calc_reaction_terms(float eta, float omega, float T, float Delta_t)
 {
     float exp_term = exp(E_a / (R * T));
     
