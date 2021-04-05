@@ -6,7 +6,7 @@ import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 
-T = np.genfromtxt(os.path.join(os.path.dirname(sys.path[0]), 'solutions/solution_1.csv'), delimiter=',')[10:, :-1]
+T = np.genfromtxt(os.path.join(os.path.dirname(sys.path[0]), 'solutions/solution_1.csv'), delimiter=',')[:, :-1]
 
 # print(T)
 
@@ -27,6 +27,8 @@ surf = ax.plot_surface(t_arr, x_arr, T, cmap='magma')
 
 ax.set_xlabel('t')
 ax.set_ylabel('x')
+
+# ax.set_zlim([250, 2500])
 
 # ax.set_zscale('log')
 

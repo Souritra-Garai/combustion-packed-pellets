@@ -1,6 +1,17 @@
 #include "Temperature_Iterator.hpp"
 
 #include <iostream>
+#include <iterator> // needed for std::ostram_iterator
+
+template <typename T>
+std::ostream& operator<< (std::ostream& out, const std::vector<T>& v) {
+  if ( !v.empty() ) {
+    out << '[';
+    std::copy (v.begin(), v.end(), std::ostream_iterator<T>(out, ", "));
+    out << "\b\b]";
+  }
+  return out;
+}
 
 Temperature_Iterator::Temperature_Iterator(unsigned int n) :
     T_VECTOR(n, 0), ETA_VECTOR(n, 0), OMEGA_VECTOR(n, 0),
@@ -16,6 +27,8 @@ Temperature_Iterator::Temperature_Iterator(unsigned int n) :
     Delta_t = Delta_x = 0;
 
     rho = C_p = lambda = nullptr;
+
+    molar_rho_limiting_reactant = 0;
 
     h_conv = epsilon = 0;
 }
@@ -35,6 +48,9 @@ void Temperature_Iterator::Apply_BC_Banded_Matrix()
 {
     // Boundary Condition at x = 0
     F_VECTOR[0] += E_VECTOR[0] + 4 * epsilon * Stefan_Boltzmann_Constant * pow(T_VECTOR[0], 3) / Delta_x + h_conv / Delta_x;
+    // E_VECTOR[0] = G_VECTOR[0] = 0;
+    // F_VECTOR[0] = 1;
+    // G_VECTOR[0] += E_VECTOR[0];
 
     // Boundary Condition at x = L
     F_VECTOR[N-1] += G_VECTOR[N-1] + 4 * epsilon * Stefan_Boltzmann_Constant * pow(T_VECTOR[N-1], 3) / Delta_x + h_conv / Delta_x;
@@ -44,6 +60,7 @@ void Temperature_Iterator::Apply_BC_B_Vector()
 {
     // Boundary Condition at x = 0
     B_VECTOR[0] += h_conv * T_atm / Delta_x + epsilon * Stefan_Boltzmann_Constant * (3 * pow(T_VECTOR[0], 4) + pow(T_atm, 4)) / Delta_x;
+    // B_VECTOR[0] = T_final;
 
     // Boundary Condition at x = L
     B_VECTOR[N-1] += h_conv * T_atm / Delta_x + epsilon * Stefan_Boltzmann_Constant * (3 * pow(T_VECTOR[N-1], 4) + pow(T_atm, 4)) / Delta_x;
@@ -51,15 +68,24 @@ void Temperature_Iterator::Apply_BC_B_Vector()
 
 void Temperature_Iterator::Setup_Matrix_Equation()
 {
+    // std::cout << OMEGA_VECTOR << std::endl;
+    // std::cout << ETA_VECTOR << std::endl;
+    // std::cout << T_VECTOR << std::endl;
+
+    int i = 0;
+
     for (   Reset_Banded_Matrix_Iterators(), B = B_VECTOR.begin(), T = T_VECTOR.begin(), ETA = ETA_VECTOR.begin(), OMEGA = OMEGA_VECTOR.begin();
-            In_Range_Banded_Matrix_Iterators() && In_Post_Combustion_Zone(*ETA);
+            In_Range_Banded_Matrix_Iterators() && In_Post_Combustion_Zone(*ETA, *T);
             Increment_Banded_Matrix_Iterators(), B++, T++, ETA++, OMEGA++   )
     {
         *E = Calc_E(2);
         *G = Calc_G(2);
         *F = Calc_F(2, *T);
         *B = Calc_B(2, *T);
+        i++;
     }
+
+    std::cout << "\tReaction zone start grid #\t" << i << std::endl;
 
     for (   ;
             In_Range_Banded_Matrix_Iterators() && In_Reaction_Zone(*T);
@@ -67,9 +93,21 @@ void Temperature_Iterator::Setup_Matrix_Equation()
     {
         *E = Calc_E(1);
         *G = Calc_G(1);
-        *F = Calc_F(1, *T);
-        *B = Calc_B(1, *T);
+
+        std::pair<long double, long double> reaction_terms = Calc_Reaction_Terms(*ETA, *T, Delta_t);
+
+        std::cout << "\t\tB\t" << Calc_B(1, *T) << "\tF\t" << Calc_F(1, *T) << std::endl;
+        std::cout << "\tReaction Term\t" << reaction_terms.first * molar_rho_limiting_reactant << '\t' << reaction_terms.second * molar_rho_limiting_reactant << std::endl;
+        std::cout << "\t\tCalc\t" << (1- (*ETA)) << std::endl;
+
+        *F = Calc_F(1, *T) - molar_rho_limiting_reactant * reaction_terms.second;
+        *B = Calc_B(1, *T) + molar_rho_limiting_reactant * reaction_terms.first;
+
+        std::cout << "\t\tTemperature\t" << *T << "\tOmega\t" << *OMEGA << std::endl;
+        i++;
     }
+
+    std::cout << "\tReaction zone end grid #\t" << i << std::endl;
 
     for (   ;
             In_Range_Banded_Matrix_Iterators();
@@ -84,12 +122,17 @@ void Temperature_Iterator::Setup_Matrix_Equation()
     Apply_BC_Banded_Matrix();
     Apply_BC_B_Vector();
 
+    // std::cout << E_VECTOR << std::endl;
+    // std::cout << F_VECTOR << std::endl;
+    // std::cout << G_VECTOR << std::endl;
+    // std::cout << B_VECTOR << std::endl;
+
     SOLVER.setup_banded_matrix(E_VECTOR, F_VECTOR, G_VECTOR);
 }
 
-bool Temperature_Iterator::In_Reaction_Zone(long double Temperature) {return Temperature > T_ign;}
+bool Temperature_Iterator::In_Reaction_Zone(long double Temperature) {return Temperature >= T_ign;}
 
-bool Temperature_Iterator::In_Post_Combustion_Zone(long double Conversion) {return Conversion > 1 - 0.00001;}
+bool Temperature_Iterator::In_Post_Combustion_Zone(long double Conversion, long double Temperature) {return Temperature >= T_final;} // Conversion > 1 - 0.00001;}
 
 void Temperature_Iterator::Set_Time_Step_Length(long double Dt) {Delta_t = Dt;}
 
@@ -139,11 +182,13 @@ void Temperature_Iterator::Apply_Initial_Condition(std::vector<long double> T_IN
 {
     std::copy(T_INITIAL_VECTOR.begin(), T_INITIAL_VECTOR.end(), T_VECTOR.begin());
 
+    ETA_VECTOR[0] = 1l;
+
     for (   T = T_VECTOR.begin(), ETA = ETA_VECTOR.begin(), OMEGA = OMEGA_VECTOR.begin();
             T < T_VECTOR.end();
             T++, ETA++, OMEGA++ )
     {
-        *OMEGA = calc_conversion_rate(*ETA, *T);
+        *OMEGA = Calc_Omega(*ETA, *T);
     }
 }
 
@@ -156,15 +201,20 @@ void Temperature_Iterator::Set_Curved_Surface_Heat_Losses(long double Convective
 void Temperature_Iterator::Update_Reaction_Zone()
 {
     for (   T = T_VECTOR.begin(), ETA = ETA_VECTOR.begin(), OMEGA = OMEGA_VECTOR.begin();
-            T < T_VECTOR.end() && In_Post_Combustion_Zone(*ETA);
+            T < T_VECTOR.end() && In_Post_Combustion_Zone(*ETA, *T);
             T++, ETA++, OMEGA++ )   ;
 
     for (   ;
             T < T_VECTOR.end() && In_Reaction_Zone(*T);
             T++, ETA++, OMEGA++ )
     {
-        *OMEGA  = omega_update  (*OMEGA, *T,  *ETA, Delta_t);
-        *ETA    = eta_update    (*OMEGA, *ETA, Delta_t);
+        *OMEGA  = Omega_Update  (*ETA, *T, Delta_t);
+        *ETA    = Eta_Update    (*ETA, *OMEGA, Delta_t);
     }
 
+}
+
+void Temperature_Iterator::Set_Molar_Density_Limiting_Reactant(long double Density, long double Volume_Fraction, long double Molar_Weight)
+{
+    molar_rho_limiting_reactant = Density * Volume_Fraction / Molar_Weight;
 }

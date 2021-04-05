@@ -6,24 +6,16 @@
 
 #define R 8.314
 
-#define A       0 // 2.215E25
-#define E_a     448.4E3
-#define DH_r    -50E3
+#define A       465l
+#define E_a     34.7E3l
+#define DH_r    -118.4E3l
 
-std::pair<long double, long double> calc_reaction_terms(long double eta, long double omega, long double T, long double Delta_t);
+std::pair<long double, long double> Calc_Reaction_Terms(long double Eta, long double Temperature, long double Delta_t);
 
-long double omega_update(long double omega_prev, long double temperature, long double eta, long double Delta_t);
+long double Omega_Update(long double Eta, long double Temperature, long double Delta_t);
 
-long double eta_update(long double omega, long double eta_prev, long double Delta_t);
+long double Eta_Update(long double Eta, long double Omega, long double Delta_t);
 
-void reaction_update(
-    std::vector<long double>::iterator omega_prev,
-    std::vector<long double>::iterator temperature,
-    std::vector<long double>::iterator eta,
-    long double Delta_t,
-    std::vector<long double>::iterator omega_arr_end
-    );
-
-long double calc_conversion_rate(long double conversion, long double temperature);
+long double Calc_Omega(long double conversion, long double temperature);
 
 #endif

@@ -26,6 +26,8 @@ class Temperature_Iterator
         long double* C_p;
         long double* lambda;
 
+        long double molar_rho_limiting_reactant;
+
         long double h_conv;
         long double epsilon;
 
@@ -57,7 +59,7 @@ class Temperature_Iterator
         void Increment_Banded_Matrix_Iterators();
 
         bool In_Reaction_Zone(long double);
-        bool In_Post_Combustion_Zone(long double);
+        bool In_Post_Combustion_Zone(long double, long double);
 
         void Apply_BC_Banded_Matrix();
         void Apply_BC_B_Vector();
@@ -71,6 +73,8 @@ class Temperature_Iterator
         void Set_Pellet_Dimensions          (long double Length, long double Diameter);
         void Set_Curved_Surface_Heat_Losses (long double Convective_Heat_Transfer_Coefficient, long double Emissivity);
         void Set_Thermophysical_Properties  (long double* Density, long double* Heat_Capacity, long double* Heat_Diffusivity);
+        
+        void Set_Molar_Density_Limiting_Reactant(long double Density, long double Volume_Fraction, long double Molar_Weight);
 
         void Apply_Initial_Condition(std::vector<long double> Initial_Temperature_Vector);
         

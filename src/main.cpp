@@ -5,14 +5,14 @@
 #include "Temperature_Iterator.hpp"
 #include "Thermodynamic_Properties.hpp"
 
-#define MAX_TIME_ITER   10000
+#define MAX_TIME_ITER   1000
 
 #define N   1000
 
 #define L   6.35E-3 // m
-#define D   6.35E-5 // m
+#define D   6.35E-3 // m
 
-#define Dt  1E-4    // s
+#define Dt  1E-3    // s
 #define Dx  L/N     // m
 
 #define T_atm   298.0   // K
@@ -53,9 +53,12 @@ int main(int argc, char** argv)
         calc_Cp_m(phi, 0.5*(rho_p_R + rho_NiAl_R), rho_Ar_R, 0.5*(Cp_p_R + Cp_NiAl_R), Cp_Ar_R),
         calc_Cp_m(phi, rho_NiAl_PC, rho_Ar_PC, Cp_NiAl_PC, Cp_Ar_PC)
     };
+
+    std::cout << rho_m[0] * Cp_m[0] / Dt << "\t" << lambda_m[0] / (Dx*Dx) << std::endl;
     
     std::cout << "Setting up solver..." << std::endl;
 
+    // for (int i=0; i<100; i++) T_MATRIX[0][i] = T_i;
     T_MATRIX[0][0] = T_f;
 
     TI.Set_Temperatures(T_atm, T_f, T_i);
@@ -63,6 +66,7 @@ int main(int argc, char** argv)
     TI.Set_Pellet_Dimensions(L, D);
     TI.Set_Thermophysical_Properties(rho_m, Cp_m, lambda_m);
     TI.Set_Curved_Surface_Heat_Losses(19.68, 0.25);
+    TI.Set_Molar_Density_Limiting_Reactant(8000, phi * (pow(69, 3) - pow(65, 3)) / pow(69, 3), 60E-3);
 
     TI.Apply_Initial_Condition(T_MATRIX[0]);
 
