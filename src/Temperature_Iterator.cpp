@@ -47,8 +47,8 @@ long double Temperature_Iterator::Calc_B(unsigned int i, long double Temperature
 void Temperature_Iterator::Apply_BC_Banded_Matrix()
 {
     // Boundary Condition at x = 0
-    F_VECTOR[0] += E_VECTOR[0] + 4 * epsilon * Stefan_Boltzmann_Constant * pow(T_VECTOR[0], 3) / Delta_x + h_conv / Delta_x;
-    // E_VECTOR[0] = G_VECTOR[0] = 0;
+    F_VECTOR[0] = - lambda[2] / Delta_x - h_conv - 4 * epsilon * Stefan_Boltzmann_Constant * pow(T_VECTOR[0], 3);
+    G_VECTOR[0] = lambda[2] / Delta_x;
     // F_VECTOR[0] = 1;
     // G_VECTOR[0] += E_VECTOR[0];
 
@@ -59,7 +59,7 @@ void Temperature_Iterator::Apply_BC_Banded_Matrix()
 void Temperature_Iterator::Apply_BC_B_Vector()
 {
     // Boundary Condition at x = 0
-    B_VECTOR[0] += h_conv * T_atm / Delta_x + epsilon * Stefan_Boltzmann_Constant * (3 * pow(T_VECTOR[0], 4) + pow(T_atm, 4)) / Delta_x;
+    B_VECTOR[0] = - h_conv * T_atm - epsilon * Stefan_Boltzmann_Constant * (3 * pow(T_VECTOR[0], 4) + pow(T_atm, 4));
     // B_VECTOR[0] = T_final;
 
     // Boundary Condition at x = L

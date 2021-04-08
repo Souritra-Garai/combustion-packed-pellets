@@ -26,41 +26,52 @@
 // for each time point
 std::vector<std::vector<long double>> T_MATRIX(1, std::vector<long double> (N, T_atm));
 
+// Object handling everything for an implicit time step update
 Temperature_Iterator TI(N);
 
+// Function to check Temperature vectors for two consecutive time steps
+// are equal, that is steady state has been reached
 bool has_converged(std::vector<long double>, std::vector<long double>);
 
 int main(int argc, char** argv)
 {
     // Finding the mean thermophysical properties for diffrent zones
-    // Pre heat zone
+    // Properties are presented in an array
+    // 0 - Preaheat Zone
+    // 1 - Reaction Zone
+    // 2 - Post Combustion Zone
+
+    // Heat conductivity for Preheat, Reaction and Post Combustion zones
     long double lambda_m[3] = {
         calc_lambda_m(phi, alpha, lambda_p_P, lambda_Ar_P),
         calc_lambda_m(phi, alpha, 0.5*(lambda_p_R + lambda_NiAl_R), lambda_Ar_R),
         calc_lambda_m(phi, alpha, lambda_NiAl_PC, lambda_Ar_PC)
     };
     
-    // Post combustion zone
+    // Density for Preheat, Reaction and Post Combustion zones
     long double rho_m[3] = {
         calc_rho_m(phi, rho_p_P, rho_Ar_P),
         calc_rho_m(phi, 0.5*(rho_p_R + rho_NiAl_R), rho_Ar_R),
         calc_rho_m(phi, rho_NiAl_PC, rho_Ar_PC)
     };
     
-    // Reaction zone
+    // Heat Capacity for Preheat, Reaction and Post Combustion zones
     long double Cp_m[3] = {
         calc_Cp_m(phi, rho_p_P, rho_Ar_P, Cp_p_P, Cp_Ar_P),
         calc_Cp_m(phi, 0.5*(rho_p_R + rho_NiAl_R), rho_Ar_R, 0.5*(Cp_p_R + Cp_NiAl_R), Cp_Ar_R),
         calc_Cp_m(phi, rho_NiAl_PC, rho_Ar_PC, Cp_NiAl_PC, Cp_Ar_PC)
     };
 
-    std::cout << rho_m[0] * Cp_m[0] / Dt << "\t" << lambda_m[0] / (Dx*Dx) << std::endl;
-    
     std::cout << "Setting up solver..." << std::endl;
 
-    // for (int i=0; i<100; i++) T_MATRIX[0][i] = T_i;
-    T_MATRIX[0][0] = T_f;
+    // Setting the initial condition on the first vector of T_MATRIX
+    // T_MATRIX is already initialised with ambient temperature across all nodes
+    // // Sets the temperature of the first grid point to the final adiabatic temperature
+    // T_MATRIX[0][0] = T_f; 
+    // Sets the temperature of a first few grid points to the fianl adiabatic temperature
+    for (int i=0; i<100; i++) T_MATRIX[0][i] = T_i;
 
+    // Initializing the values of properties / constants for the Temperature Iterator objects
     TI.Set_Temperatures(T_atm, T_f, T_i);
     TI.Set_Time_Step_Length(Dt);
     TI.Set_Pellet_Dimensions(L, D);
