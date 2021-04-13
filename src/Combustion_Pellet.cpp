@@ -1,4 +1,4 @@
-#include "Combustion_Pellet.hpp"
+#include "Thermo_Physical_Properties/Combustion_Pellet.hpp"
 
 Combustion_Pellet::Combustion_Pellet(
     long double D,
@@ -6,12 +6,8 @@ Combustion_Pellet::Combustion_Pellet(
     Pellet_Properties PH,
     Pellet_Properties PC,
     Reaction_Zone_Pellet_Properties R
-)
+) : Pre_Heat_Zone(PH), Post_Combustion_Zone(PC), Reaction_Zone(R)
 {
-    Pre_Heat_Zone = &PH;
-    Post_Combustion_Zone = &PC;
-    Reaction_Zone = &R;
-
     Diameter = D;
     Length = L;
 
@@ -56,12 +52,12 @@ void Combustion_Pellet::Setup_Pre_Heat_Zone_Equation(
     long double Dt
 )
 {
-    E = G = - Pre_Heat_Zone->Get_Heat_Conductivity() / (Dx * Dx);
+    E = G = - Pre_Heat_Zone.Get_Heat_Conductivity() / (Dx * Dx);
 
     std::pair<long double, long double> polynomial = Get_Heat_Loss_Polynomial(T);
 
-    F = Pre_Heat_Zone->Get_Density() * Pre_Heat_Zone->Get_Heat_Capacity() / Dt + 2 * Pre_Heat_Zone->Get_Heat_Conductivity() / (Dx * Dx) + polynomial.first;
-    B = Pre_Heat_Zone->Get_Density() * Pre_Heat_Zone->Get_Heat_Capacity() / Dt + polynomial.second;
+    F = Pre_Heat_Zone.Get_Density() * Pre_Heat_Zone.Get_Heat_Capacity() / Dt + 2 * Pre_Heat_Zone.Get_Heat_Conductivity() / (Dx * Dx) + polynomial.first;
+    B = Pre_Heat_Zone.Get_Density() * Pre_Heat_Zone.Get_Heat_Capacity() / Dt + polynomial.second;
 }
 
 void Combustion_Pellet::Setup_Reaction_Zone_Equation(
@@ -74,12 +70,12 @@ void Combustion_Pellet::Setup_Reaction_Zone_Equation(
     long double Dt
 )
 {
-    E = G = - Reaction_Zone->Get_Heat_Conductivity() / (Dx * Dx);
+    E = G = - Reaction_Zone.Get_Heat_Conductivity() / (Dx * Dx);
 
     std::pair<long double, long double> polynomial = Get_Heat_Loss_Polynomial(T);
 
-    F = Reaction_Zone->Get_Density() * Reaction_Zone->Get_Heat_Capacity() / Dt + 2 * Reaction_Zone->Get_Heat_Conductivity() / (Dx * Dx) + polynomial.first;
-    B = Reaction_Zone->Get_Density() * Reaction_Zone->Get_Heat_Capacity() / Dt + polynomial.second;
+    F = Reaction_Zone.Get_Density() * Reaction_Zone.Get_Heat_Capacity() / Dt + 2 * Reaction_Zone.Get_Heat_Conductivity() / (Dx * Dx) + polynomial.first;
+    B = Reaction_Zone.Get_Density() * Reaction_Zone.Get_Heat_Capacity() / Dt + polynomial.second;
 }
 
 void Combustion_Pellet::Setup_Post_Combustion_Zone_Equation(
@@ -92,12 +88,12 @@ void Combustion_Pellet::Setup_Post_Combustion_Zone_Equation(
     long double Dt
 )
 {
-    E = G = - Post_Combustion_Zone->Get_Heat_Conductivity() / (Dx * Dx);
+    E = G = - Post_Combustion_Zone.Get_Heat_Conductivity() / (Dx * Dx);
 
     std::pair<long double, long double> polynomial = Get_Heat_Loss_Polynomial(T);
 
-    F = Post_Combustion_Zone->Get_Density() * Post_Combustion_Zone->Get_Heat_Capacity() / Dt + 2 * Post_Combustion_Zone->Get_Heat_Conductivity() / (Dx * Dx) + polynomial.first;
-    B = Post_Combustion_Zone->Get_Density() * Post_Combustion_Zone->Get_Heat_Capacity() / Dt + polynomial.second;
+    F = Post_Combustion_Zone.Get_Density() * Post_Combustion_Zone.Get_Heat_Capacity() / Dt + 2 * Post_Combustion_Zone.Get_Heat_Conductivity() / (Dx * Dx) + polynomial.first;
+    B = Post_Combustion_Zone.Get_Density() * Post_Combustion_Zone.Get_Heat_Capacity() / Dt + polynomial.second;
 }
 
 void Combustion_Pellet::Setup_X0_Isothermal_BC_Equation(
@@ -144,7 +140,7 @@ void Combustion_Pellet::Setup_X0_Ambient_Heat_Loss_BC_Equation(
     int z
 )
 {
-    long double lambda = z * (z-1) * Post_Combustion_Zone->Get_Heat_Conductivity() / 2 + z * (z-2) * Reaction_Zone->Get_Heat_Conductivity() / (-1) + (z-1) * (z-2) * Pre_Heat_Zone->Get_Heat_Conductivity() / 2; 
+    long double lambda = z * (z-1) * Post_Combustion_Zone.Get_Heat_Conductivity() / 2 + z * (z-2) * Reaction_Zone.Get_Heat_Conductivity() / (-1) + (z-1) * (z-2) * Pre_Heat_Zone.Get_Heat_Conductivity() / 2; 
     E = 0;
     F = - (lambda / Dx) - Convective_Heat_Transfer_Coefficient - 4 * Radiative_Emissivity * Stefan_Boltzmann_Constant * pow(T, 3);
     G = lambda / Dx;
@@ -178,9 +174,14 @@ void Combustion_Pellet::Setup_XM_Ambient_Heat_Loss_BC_Equation(
     int z
 )
 {
-    long double lambda = z * (z-1) * Post_Combustion_Zone->Get_Heat_Conductivity() / 2 + z * (z-2) * Reaction_Zone->Get_Heat_Conductivity() / (-1) + (z-1) * (z-2) * Pre_Heat_Zone->Get_Heat_Conductivity() / 2; 
+    long double lambda = z * (z-1) * Post_Combustion_Zone.Get_Heat_Conductivity() / 2 + z * (z-2) * Reaction_Zone.Get_Heat_Conductivity() / (-1) + (z-1) * (z-2) * Pre_Heat_Zone.Get_Heat_Conductivity() / 2; 
     E = lambda / Dx;
     F = - (lambda / Dx) - Convective_Heat_Transfer_Coefficient - 4 * Radiative_Emissivity * Stefan_Boltzmann_Constant * pow(T, 3);
     G = 0;
     B = - Convective_Heat_Transfer_Coefficient * Ambient_Temperature - Radiative_Emissivity * Stefan_Boltzmann_Constant * (3*pow(T, 4) + pow(Ambient_Temperature, 4));
+}
+
+long double Combustion_Pellet::Get_Pellet_Length()
+{
+    return Length;
 }

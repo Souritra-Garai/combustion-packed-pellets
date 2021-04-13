@@ -1,40 +1,49 @@
 #ifndef __PELLET_PROPS__
 #define __PELLET_PROPS__
 
-#include "Substance.hpp"
-#include "Coated_Particle.hpp"
+#include "Thermo_Physical_Properties/Coated_Particle.hpp"
 
 class Pellet_Properties
 {
-    protected:
+    private:
         
-        Coated_Particle *Particle_A;        
-        Substance *Fluid;
-
         long double Density;
         long double Heat_Capacity;
         long double Heat_Conductivity;
 
-        long double Packing_Volume_Fraction;
-
     public:
 
-        Pellet_Properties(Coated_Particle Particle, Substance Degassed_Fluid, long double Packing_Volume_Fraction);
+        Pellet_Properties(
+            Coated_Particle Particle,
+            Substance Degassed_Fluid,
+            long double Packing_Volume_Fraction
+        );
 
         long double Get_Density();
         long double Get_Heat_Capacity();
         long double Get_Heat_Conductivity();
 };
 
-class Reaction_Zone_Pellet_Properties : public Pellet_Properties
+class Reaction_Zone_Pellet_Properties
 {
-    protected:
+    private:
         
-        Coated_Particle *Particle_B;
+        long double Density;
+        long double Heat_Capacity;
+        long double Heat_Conductivity;
 
     public:
 
-        Reaction_Zone_Pellet_Properties(Coated_Particle Reactant, Coated_Particle Product, Substance Degassed_Fluid, long double Packing_Volume_Fraction);
+        Reaction_Zone_Pellet_Properties(
+            Coated_Particle Reactant,
+            Coated_Particle Product,
+            Substance Degassed_Fluid,
+            long double Packing_Volume_Fraction
+        );
+
+        long double Get_Density();
+        long double Get_Heat_Capacity();
+        long double Get_Heat_Conductivity();
 };
 
 long double Calc_Density(

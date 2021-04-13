@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "Pellet_Properties.hpp"
+#include "Thermo_Physical_Properties/Pellet_Properties.hpp"
 
 #define Stefan_Boltzmann_Constant 5.670374419E-8
 
@@ -14,9 +14,9 @@ class Combustion_Pellet
         long double Diameter;
         long double Length;
 
-        Pellet_Properties *Pre_Heat_Zone;
-        Pellet_Properties *Post_Combustion_Zone;
-        Reaction_Zone_Pellet_Properties *Reaction_Zone;
+        Pellet_Properties Pre_Heat_Zone;
+        Pellet_Properties Post_Combustion_Zone;
+        Reaction_Zone_Pellet_Properties Reaction_Zone;
 
         long double Convective_Heat_Transfer_Coefficient;
         long double Radiative_Emissivity;
@@ -37,6 +37,8 @@ class Combustion_Pellet
         void Set_Convective_Heat_Transfer_Coefficient(long double Convective_Heat_Transfer_Coefficient);
         void Set_Radiative_Emissivity(long double Radiative_Emissivity);
         void Set_Ambient_Temperature(long double Ambient_Temperature);
+
+        long double Get_Pellet_Length();
 
         void Setup_Pre_Heat_Zone_Equation(
             long double &E,

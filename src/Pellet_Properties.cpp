@@ -1,15 +1,10 @@
-#include "Pellet_Properties.hpp"
+#include "Thermo_Physical_Properties/Pellet_Properties.hpp"
 
 Pellet_Properties::Pellet_Properties(Coated_Particle P, Substance F, long double phi)
 {
-    Particle_A = &P;
-    Fluid = &F;
-
-    Packing_Volume_Fraction = phi;
-
-    Density             = Calc_Density(Packing_Volume_Fraction, Particle_A->Get_Density(), Fluid->Get_Density());
-    Heat_Capacity       = Calc_Heat_Capacity(Packing_Volume_Fraction, Particle_A->Get_Density(), Particle_A->Get_Heat_Capacity(), Fluid->Get_Density(), Fluid->Get_Heat_Capacity());
-    Heat_Conductivity   = Calc_Heat_Conductivity_Bruggemann_Model(Packing_Volume_Fraction, Particle_A->Get_Heat_Conductivity(), Fluid->Get_Heat_Conductivity());
+    Density             = Calc_Density(phi, P.Get_Density(), F.Get_Density());
+    Heat_Capacity       = Calc_Heat_Capacity(phi, P.Get_Density(), P.Get_Heat_Capacity(), F.Get_Density(), F.Get_Heat_Capacity());
+    Heat_Conductivity   = Calc_Heat_Conductivity_Bruggemann_Model(phi, P.Get_Heat_Conductivity(), F.Get_Heat_Conductivity());
 }
 
 long double Pellet_Properties::Get_Density()
@@ -27,13 +22,30 @@ long double Pellet_Properties::Get_Heat_Conductivity()
     return Heat_Conductivity;
 }
 
-Reaction_Zone_Pellet_Properties::Reaction_Zone_Pellet_Properties(Coated_Particle R, Coated_Particle P, Substance F, long double phi) : Pellet_Properties(R, F, phi)
+Reaction_Zone_Pellet_Properties::Reaction_Zone_Pellet_Properties(Coated_Particle R, Coated_Particle P, Substance F, long double phi)
 {
-    Particle_B = &P;
+    long double rho_P       = 0.5 * (R.Get_Density() + P.Get_Density());
+    long double C_P         = 0.5 * (R.Get_Heat_Capacity() + P.Get_Heat_Capacity());
+    long double lambda_P    = 0.5 * (R.Get_Heat_Conductivity() + P.Get_Heat_Conductivity());
 
-    Density             = Calc_Density(Packing_Volume_Fraction, 0.5 * (Particle_A->Get_Density() + Particle_B->Get_Density()), Fluid->Get_Density());
-    Heat_Capacity       = Calc_Heat_Capacity(Packing_Volume_Fraction, 0.5 * (Particle_A->Get_Density() + Particle_B->Get_Density()), 0.5* (Particle_A->Get_Heat_Capacity() + Particle_B->Get_Heat_Capacity()), Fluid->Get_Density(), Fluid->Get_Heat_Capacity());
-    Heat_Conductivity   = Calc_Heat_Conductivity_Bruggemann_Model(Packing_Volume_Fraction, 0.5*(Particle_A->Get_Heat_Conductivity()+Particle_B->Get_Heat_Conductivity()), Fluid->Get_Heat_Conductivity());
+    Density             = Calc_Density(phi, rho_P, F.Get_Density());
+    Heat_Capacity       = Calc_Heat_Capacity(phi, rho_P, C_P, F.Get_Density(), F.Get_Heat_Capacity());
+    Heat_Conductivity   = Calc_Heat_Conductivity_Bruggemann_Model(phi, lambda_P, F.Get_Heat_Conductivity());
+}
+
+long double Reaction_Zone_Pellet_Properties::Get_Density()
+{
+    return Density;
+}
+
+long double Reaction_Zone_Pellet_Properties::Get_Heat_Capacity()
+{
+    return Heat_Capacity;
+}
+
+long double Reaction_Zone_Pellet_Properties::Get_Heat_Conductivity()
+{
+    return Heat_Conductivity;
 }
 
 long double Calc_Density(long double phi_p, long double rho_p, long double rho_f)

@@ -8,7 +8,7 @@ BINDIR := bin
 BUILDDIR := build
 
 # Building this file is the main objective
-TARGET := $(BINDIR)/simulate_pellet_diffusion
+TARGET := $(BINDIR)/simulate_pellet_combustion
 
 # Finding all source and object files
 SRCEXT := cpp
@@ -25,27 +25,47 @@ $(TARGET) : $(OBJECTS)
 	@echo "\nLinking all...";
 	$(CC) $(OBJECTS) $(CFLAGS) $(LIB) -o $(TARGET)
 
-$(BUILDDIR)/main.o : $(SRCDIR)/main.cpp $(INCDIR)/Temperature_Iterator.hpp $(INCDIR)/Thermodynamic_Properties.hpp
+$(BUILDDIR)/main.o : $(SRCDIR)/main.cpp $(INCDIR)/Combustion_Problem.hpp
 	@mkdir -p $(BUILDDIR);
 	@echo "\nCompiling main...";
 	$(CC) $(CFLAGS) $(INC) -c $(SRCDIR)/main.cpp -o $(BUILDDIR)/main.o
 
-$(BUILDDIR)/Temperature_Iterator.o : $(SRCDIR)/Temperature_Iterator.cpp $(INCDIR)/Temperature_Iterator.hpp $(INCDIR)/TDMA_solver.hpp $(INCDIR)/Kinetics.hpp
+$(BUILDDIR)/Combustion_Problem.o : $(SRCDIR)/Combustion_Problem.cpp $(INCDIR)/Combustion_Problem.hpp $(INCDIR)/TDMA_solver.hpp $(INCDIR)/Kinetics/Reaction.hpp $(INCDIR)/Thermo_Physical_Properties/Combustion_Pellet.hpp
 	@mkdir -p $(BUILDDIR);
-	@echo "\nCompiling Temperature_Iterator...";
-	$(CC) $(CFLAGS) $(INC) -c $(SRCDIR)/Temperature_Iterator.cpp -o $(BUILDDIR)/Temperature_Iterator.o
+	@echo "\nCompiling Combustion_Problem...";
+	$(CC) $(CFLAGS) $(INC) -c $(SRCDIR)/Combustion_Problem.cpp -o $(BUILDDIR)/Combustion_Problem.o
 
 $(BUILDDIR)/TDMA_solver.o : $(SRCDIR)/TDMA_solver.cpp $(INCDIR)/TDMA_solver.hpp
 	@mkdir -p $(BUILDDIR);
 	@echo "\nCompiling TDMA_solver...";
 	$(CC) $(CFLAGS) $(INC) -c $(SRCDIR)/TDMA_solver.cpp -o $(BUILDDIR)/TDMA_solver.o
 
-$(BUILDDIR)/Thermodynamic_Properties.o : $(SRCDIR)/Thermodynamic_Properties.cpp $(INCDIR)/Thermodynamic_Properties.hpp
+$(BUILDDIR)/Combustion_Pellet.o : $(SRCDIR)/Combustion_Pellet.cpp $(INCDIR)/Thermo_Physical_Properties/Combustion_Pellet.hpp $(INCDIR)/Thermo_Physical_Properties/Pellet_Properties.hpp
 	@mkdir -p $(BUILDDIR);
-	@echo "\nCompiling Thermodynamic_Properties...";
-	$(CC) $(CFLAGS) $(INC) -c $(SRCDIR)/Thermodynamic_Properties.cpp -o $(BUILDDIR)/Thermodynamic_Properties.o
+	@echo "\nCompiling Combustion_Pellet...";
+	$(CC) $(CFLAGS) $(INC) -c $(SRCDIR)/Combustion_Pellet.cpp -o $(BUILDDIR)/Combustion_Pellet.o
 
-$(BUILDDIR)/Kinetics.o : $(SRCDIR)/Kinetics.cpp $(INCDIR)/Kinetics.hpp
+$(BUILDDIR)/Pellet_Properties.o : $(SRCDIR)/Pellet_Properties.cpp $(INCDIR)/Thermo_Physical_Properties/Pellet_Properties.hpp $(INCDIR)/Thermo_Physical_Properties/Coated_Particle.hpp $(INCDIR)/Thermo_Physical_Properties/Substance.hpp
+	@mkdir -p $(BUILDDIR);
+	@echo "\nCompiling Pellet_Properties...";
+	$(CC) $(CFLAGS) $(INC) -c $(SRCDIR)/Pellet_Properties.cpp -o $(BUILDDIR)/Pellet_Properties.o
+
+$(BUILDDIR)/Coated_Particle.o : $(SRCDIR)/Coated_Particle.cpp $(INCDIR)/Thermo_Physical_Properties/Coated_Particle.hpp $(INCDIR)/Thermo_Physical_Properties/Substance.hpp
+	@mkdir -p $(BUILDDIR);
+	@echo "\nCompiling Coated_Particle...";
+	$(CC) $(CFLAGS) $(INC) -c $(SRCDIR)/Coated_Particle.cpp -o $(BUILDDIR)/Coated_Particle.o
+
+$(BUILDDIR)/Substance.o : $(SRCDIR)/Substance.cpp $(INCDIR)/Thermo_Physical_Properties/Substance.hpp
+	@mkdir -p $(BUILDDIR);
+	@echo "\nCompiling Substance...";
+	$(CC) $(CFLAGS) $(INC) -c $(SRCDIR)/Substance.cpp -o $(BUILDDIR)/Substance.o
+
+$(BUILDDIR)/Reaction.o : $(SRCDIR)/Reaction.cpp $(INCDIR)/Kinetics/Reaction.hpp
+	@mkdir -p $(BUILDDIR);
+	@echo "\nCompiling Reaction...";
+	$(CC) $(CFLAGS) $(INC) -c $(SRCDIR)/Reaction.cpp -o $(BUILDDIR)/Reaction.o
+
+$(BUILDDIR)/Kinetics.o : $(SRCDIR)/Kinetics.cpp $(INCDIR)/Kinetics/Kinetics.hpp
 	@mkdir -p $(BUILDDIR);
 	@echo "\nCompiling Kinetics...";
 	$(CC) $(CFLAGS) $(INC) -c $(SRCDIR)/Kinetics.cpp -o $(BUILDDIR)/Kinetics.o

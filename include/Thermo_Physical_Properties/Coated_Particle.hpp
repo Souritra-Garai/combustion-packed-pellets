@@ -1,7 +1,7 @@
 #ifndef __COATED_PARTICLE__
 #define __COATED_PARTICLE__
 
-#include "Substance.hpp"
+#include "Thermo_Physical_Properties/Substance.hpp"
 
 #include <math.h>
 
@@ -9,11 +9,9 @@ class Coated_Particle
 {
     private:
 
-        Substance *Core;
-        Substance *Shell;
-
-        long double Core_Diameter;
-        long double Overall_Diameter;
+        long double Density;
+        long double Heat_Capacity;
+        long double Heat_Conductivity;
         
     public:
 
