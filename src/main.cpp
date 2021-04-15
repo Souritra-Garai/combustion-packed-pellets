@@ -5,9 +5,9 @@
 #include "Combustion_Problem.hpp"
 
 #define MAX_TIME_ITER   1000
-#define NO_GRID_POINTS  10
+#define NO_GRID_POINTS  1000
 
-#define TIME_STEP_SIZE  1E-4
+#define TIME_STEP_SIZE  1E-3
 
 #define phi_P   0.5
 
@@ -109,14 +109,14 @@ Combustion_Pellet my_Pellet(
 
 Kinetics Sundaram_et_al(
     "Sundaram et al 2013",
-    465l,
+    465.23l * Mol_Al / ((M_PIl / 6) * pow(Reaction_Particle_Overall_Diameter, 3)),
     34.7E3l, 
     0
 );
 
 Reaction Combustion_Reaction(
     Sundaram_et_al,
-    - 50E3,
+    -118.4E3l,
     Mol_Al / ((M_PIl / 6) * pow(Reaction_Particle_Overall_Diameter, 3)),
     phi_P
 );
@@ -151,14 +151,17 @@ int main(int argc, char** argv)
     std::cout << "Initialised Problem" << std::endl;
 
     std::vector<long double> Temperature_Array(NO_GRID_POINTS, 298);
-    Temperature_Array[0] = 1911;
-
-    for (int i = 0; i < 10; i++)
-
-        Temperature_Array[i] = 933;
 
     std::vector<long double> Conversion_Array(NO_GRID_POINTS, 0);
+
+    Temperature_Array[0] = 1911;
     Conversion_Array[0] = 1;
+
+    for (int i = 1; i < 100; i++)
+    {
+        Temperature_Array[i] = 933;
+        Conversion_Array[i] = 0;
+    }
 
     my_Problem.Set_Initial_Conditions(Temperature_Array, Conversion_Array);
 

@@ -66,4 +66,11 @@ long double Calc_Heat_Conductivity_Bruggemann_Model(
     long double Degassed_Fluid_Heat_Conductivity
 );
 
+long double Calc_Heat_Conductivity_Maxwell_Eucken_Bruggemann_Model(
+    long double Particle_Volume_Fraction,
+    long double Particle_Volume_Fraction_Maxwell_Eucken_Structure,
+    long double Particle_Heat_Conductivity,
+    long double Degassed_Fluid_Heat_Conductivity
+);
+
 #endif

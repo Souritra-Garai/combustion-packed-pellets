@@ -63,12 +63,13 @@ void Combustion_Problem::Increment_Equation_Iterators()
 
 bool Combustion_Problem::In_Post_Combustion_Zone(long double Conversion, long double Temperature)
 {
-    return (Conversion > 1l - 0.00001l) && In_Range_Equation_Iterators();
+    return (Conversion > 1.0l - 0.00001l) && In_Range_Equation_Iterators();
+    // return (Temperature >= Adiabatic_Combustion_Temperature) && In_Range_Equation_Iterators();
 }
 
 bool Combustion_Problem::In_Reaction_Zone(long double Temperature)
 {
-    return (Temperature > Ignition_Temperature) && In_Range_Equation_Iterators();
+    return (Temperature >= Ignition_Temperature) && In_Range_Equation_Iterators();
 }
 
 void Combustion_Problem::Setup_Solver()
@@ -89,8 +90,12 @@ void Combustion_Problem::Setup_Solver()
 
         std::pair<long double, long double> Reaction_Terms = Combustion_Reaction.Get_Linear_Expression(*T, *ETA, Delta_t);
 
-        *F += Reaction_Terms.first;
-        *B += Reaction_Terms.second;
+        // std::cout << "In Reaction Zone" << std::endl;
+        // std::cout << Reaction_Terms.first << '\t' << Reaction_Terms.second << std::endl;
+        // std::cout << *F << '\t' << *B << std::endl;
+
+        *F += - Reaction_Terms.second;
+        *B += Reaction_Terms.first;
     }
 
     for ( ; In_Range_Equation_Iterators(); Increment_Equation_Iterators())
@@ -100,11 +105,10 @@ void Combustion_Problem::Setup_Solver()
     int zone = In_Reaction_Zone(*T) ? (In_Post_Combustion_Zone(*ETA, *T) ? 2 : 1) : 0;
     Pellet.Setup_XM_Ambient_Heat_Loss_BC_Equation(*E, *F, *G, *B, *T, Delta_x, Delta_t, zone);
 
-    std::cout << E_VECTOR << std::endl;
-    std::cout << F_VECTOR << std::endl;
-    std::cout << G_VECTOR << std::endl;
-    std::cout << B_VECTOR << std::endl;
-
+    // std::cout << E_VECTOR << std::endl;
+    // std::cout << F_VECTOR << std::endl;
+    // std::cout << G_VECTOR << std::endl;
+    // std::cout << B_VECTOR << std::endl;
 
     SOLVER.setup_banded_matrix(E_VECTOR, F_VECTOR, G_VECTOR);
 }
@@ -113,7 +117,7 @@ void Combustion_Problem::Solve_and_Update_State()
 {
     T_VECTOR = SOLVER.solve(B_VECTOR);
 
-    std::cout << T_VECTOR << std::endl;
+    // std::cout << T_VECTOR << std::endl;
 
     Reset_Equation_Iterators();
 

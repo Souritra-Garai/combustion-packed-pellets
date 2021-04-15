@@ -1,5 +1,7 @@
 #include "Kinetics/Kinetics.hpp"
 
+#include <iostream>
+
 Kinetics::Kinetics(
     std::string N,
     long double A,
@@ -34,6 +36,6 @@ std::pair<long double, long double> Kinetics::Get_Partial_Derivative_Reaction_Ra
 
     return std::pair<long double, long double> (
         - Order * k * pow(C, Order - 1),
-        - k * Activation_Energy * exp(- Activation_Energy / (Universal_Gas_Constant * T)) / (Universal_Gas_Constant * T * T)
+        - k * pow(C, Order) * Activation_Energy / (Universal_Gas_Constant * T * T)
     );
 }

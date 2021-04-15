@@ -1,5 +1,7 @@
 #include "Kinetics/Reaction.hpp"
 
+// #include <iostream>
+
 Reaction::Reaction(Kinetics K, long double Delta_H_r, long double C_A0, long double phi_p) : Reaction_Kinetics(K)
 {
     Enthalpy_of_Reaction = Delta_H_r;
@@ -17,11 +19,19 @@ std::pair<long double, long double> Reaction::Get_Linear_Expression(
 
     long double r_A = Reaction_Kinetics.Get_Reaction_Rate(Initial_Concentration * (1 - eta), T);
 
-    long double coeff = - Enthalpy_of_Reaction * Particle_Volume_Fraction;
+    long double mDH_phi_CA0 = - Enthalpy_of_Reaction * Particle_Volume_Fraction * Initial_Concentration;
+
+    long double gamma = - (r_A - T * partial_derivatives.second) / (Initial_Concentration * (1 - Dt * partial_derivatives.first));
+
+    long double kappa = - partial_derivatives.second / (Initial_Concentration * (1 - Dt * partial_derivatives.first));
+
+    // std::cout << "Partial Derivatives\t" << partial_derivatives.first << '\t' << partial_derivatives.second << std::endl;
+
+    // std::cout << "Initial Concentration\t" << Initial_Concentration << std::endl;
 
     return std::pair<long double, long double> (
-        coeff * partial_derivatives.second / (1 - partial_derivatives.first * Dt),
-        - coeff * (r_A - T * partial_derivatives.second) / (1 - partial_derivatives.first * Dt)
+        mDH_phi_CA0 * gamma,
+        mDH_phi_CA0 * kappa
     );
 }
 

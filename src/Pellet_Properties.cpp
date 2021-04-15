@@ -4,7 +4,7 @@ Pellet_Properties::Pellet_Properties(Coated_Particle P, Substance F, long double
 {
     Density             = Calc_Density(phi, P.Get_Density(), F.Get_Density());
     Heat_Capacity       = Calc_Heat_Capacity(phi, P.Get_Density(), P.Get_Heat_Capacity(), F.Get_Density(), F.Get_Heat_Capacity());
-    Heat_Conductivity   = Calc_Heat_Conductivity_Bruggemann_Model(phi, P.Get_Heat_Conductivity(), F.Get_Heat_Conductivity());
+    Heat_Conductivity   = Calc_Heat_Conductivity_Maxwell_Eucken_Bruggemann_Model(phi, 0.5, P.Get_Heat_Conductivity(), F.Get_Heat_Conductivity());
 }
 
 long double Pellet_Properties::Get_Density()
@@ -30,7 +30,7 @@ Reaction_Zone_Pellet_Properties::Reaction_Zone_Pellet_Properties(Coated_Particle
 
     Density             = Calc_Density(phi, rho_P, F.Get_Density());
     Heat_Capacity       = Calc_Heat_Capacity(phi, rho_P, C_P, F.Get_Density(), F.Get_Heat_Capacity());
-    Heat_Conductivity   = Calc_Heat_Conductivity_Bruggemann_Model(phi, lambda_P, F.Get_Heat_Conductivity());
+    Heat_Conductivity   = Calc_Heat_Conductivity_Maxwell_Eucken_Bruggemann_Model(phi, 0.5, lambda_P, F.Get_Heat_Conductivity());
 }
 
 long double Reaction_Zone_Pellet_Properties::Get_Density()
@@ -66,5 +66,14 @@ long double Calc_Heat_Conductivity_Bruggemann_Model(long double phi_p, long doub
     long double D = pow((lambda_p / lambda_f) * (3*phi_p - 1), 2) + pow(2-3*phi_p, 2) + 2 * (lambda_p / lambda_f) * (2 + 9*phi_p - 9*phi_p*phi_p);
 
     return (lambda_f/4) * ((3*phi_p - 1)*(lambda_p / lambda_f) + 2 - 3*phi_p + sqrt(D));
+}
+
+long double Calc_Heat_Conductivity_Maxwell_Eucken_Bruggemann_Model(long double phi_p, long double alpha_p_ME, long double lambda_p, long double lambda_f)
+{
+    long double phi_f = 1 - phi_p;
+
+    long double D = (2*lambda_p - lambda_f) * phi_p * (1 - alpha_p_ME) + (2*lambda_f - lambda_p) * ( (phi_f + phi_p*alpha_p_ME - 0.5) / phi_f );
+
+    return 0.5 * ( D + sqrt(pow(D, 2) + 2*lambda_p*lambda_f) );
 }
 
