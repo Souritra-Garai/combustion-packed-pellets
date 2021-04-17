@@ -2,6 +2,7 @@
 #define __COMBUSTION_PELLET__
 
 #include <vector>
+#include <fstream>
 
 #include "Thermo_Physical_Properties/Pellet_Properties.hpp"
 
@@ -106,6 +107,7 @@ class Combustion_Pellet
             long double Delta_x,
             long double Delta_t
         );
+        
         void Setup_XM_Ambient_Heat_Loss_BC_Equation(
             long double &E,
             long double &F,
@@ -116,6 +118,8 @@ class Combustion_Pellet
             long double Delta_t,
             int zone = 2
         );
+
+        void Write_to_File(std::ofstream &File_Handler, const char *Name);
 };
 
 #endif

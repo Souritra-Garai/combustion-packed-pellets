@@ -2,6 +2,7 @@
 #define __COMBUSTION_PROBLEM__
 
 #include <vector>
+#include <fstream>
 
 #include "Thermo_Physical_Properties/Combustion_Pellet.hpp"
 #include "Kinetics/Reaction.hpp"
@@ -64,6 +65,10 @@ class Combustion_Problem
         );
 
         std::pair<std::vector<long double>, std::vector<long double>> Iterate();
+
+        bool Combustion_Not_Completed();
+
+        void Write_to_File(std::ofstream &File);
 };
 
 #endif

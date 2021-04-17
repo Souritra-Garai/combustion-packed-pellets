@@ -77,3 +77,24 @@ long double Calc_Heat_Conductivity_Maxwell_Eucken_Bruggemann_Model(long double p
     return 0.5 * ( D + sqrt(pow(D, 2) + 2*lambda_p*lambda_f) );
 }
 
+void Pellet_Properties::Write_to_File(std::ofstream &file, const char *name)
+{
+    file << name << " Properties" << std::endl;
+
+    file << "Density :\t" << Get_Density() << "\t kg / m3" << std::endl;
+    file << "Heat Capacity :\t" << Get_Heat_Capacity() << "\t J / kg - K" << std::endl;
+    file << "Heat Conductivity :\t" << Get_Heat_Conductivity() << "\t W / m - K" << std::endl;
+
+    file << std::endl;
+}
+
+void Reaction_Zone_Pellet_Properties::Write_to_File(std::ofstream &file, const char *name)
+{
+    file << name << " Properties" << std::endl;
+
+    file << "Density :\t" << Get_Density() << "\t kg / m3" << std::endl;
+    file << "Heat Capacity :\t" << Get_Heat_Capacity() << "\t J / kg - K" << std::endl;
+    file << "Heat Conductivity :\t" << Get_Heat_Conductivity() << "\t W / m - K" << std::endl;
+
+    file << std::endl;
+}

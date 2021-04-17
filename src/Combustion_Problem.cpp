@@ -1,17 +1,17 @@
 #include "Combustion_Problem.hpp"
 #include <iostream>
 
-#include <iterator> // needed for std::ostram_iterator
+// #include <iterator> // needed for std::ostram_iterator
 
-template <typename T>
-std::ostream& operator<< (std::ostream& out, const std::vector<T>& v) {
-  if ( !v.empty() ) {
-    out << '[';
-    std::copy (v.begin(), v.end(), std::ostream_iterator<T>(out, ", "));
-    out << "\b\b]";
-  }
-  return out;
-}
+// template <typename T>
+// std::ostream& operator<< (std::ostream& out, const std::vector<T>& v) {
+//   if ( !v.empty() ) {
+//     out << '[';
+//     std::copy (v.begin(), v.end(), std::ostream_iterator<T>(out, ", "));
+//     out << "\b\b]";
+//   }
+//   return out;
+// }
 
 Combustion_Problem::Combustion_Problem(
     unsigned int n,
@@ -31,7 +31,7 @@ Combustion_Problem::Combustion_Problem(
     Ignition_Temperature = T_ign;
     Adiabatic_Combustion_Temperature = T_ad;
 
-    Delta_x = Pellet.Get_Pellet_Length() / N;
+    Delta_x = Pellet.Get_Pellet_Length() / (N - 1);
 }
 
 void Combustion_Problem::Reset_Equation_Iterators()
@@ -148,3 +148,31 @@ void Combustion_Problem::Set_Initial_Conditions(
     std::copy(T_Array.begin(), T_Array.end(), T_VECTOR.begin());
     std::copy(Eta_Array.begin(), Eta_Array.end(), ETA_VECTOR.begin());
 }
+
+bool Combustion_Problem::Combustion_Not_Completed()
+{
+    bool flag = true;
+
+    for (ETA = ETA_VECTOR.begin(); ETA < (ETA_VECTOR.end()-1) && flag; ETA++)
+
+        flag = (*ETA) > 1.0l - 0.00001l;
+
+    return !flag;
+}
+
+void Combustion_Problem::Write_to_File(std::ofstream &file)
+{
+    file << "Number of Grid Points :\t" << N << std::endl;
+
+    file << std::endl;
+
+    file << "Delta x :\t" << Delta_x << "\t m" << std::endl;
+    file << "Delta t :\t" << Delta_t << "\t s" << std::endl; 
+
+    file << std::endl;
+
+    file << "Ignition Temperature :\t" << Ignition_Temperature << "\t K" << std::endl;
+
+    file << std::endl;
+}
+

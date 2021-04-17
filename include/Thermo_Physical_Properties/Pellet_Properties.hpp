@@ -1,6 +1,8 @@
 #ifndef __PELLET_PROPS__
 #define __PELLET_PROPS__
 
+#include <fstream>
+
 #include "Thermo_Physical_Properties/Coated_Particle.hpp"
 
 class Pellet_Properties
@@ -22,6 +24,8 @@ class Pellet_Properties
         long double Get_Density();
         long double Get_Heat_Capacity();
         long double Get_Heat_Conductivity();
+
+        void Write_to_File(std::ofstream &File_Handler, const char *Name);
 };
 
 class Reaction_Zone_Pellet_Properties
@@ -44,6 +48,8 @@ class Reaction_Zone_Pellet_Properties
         long double Get_Density();
         long double Get_Heat_Capacity();
         long double Get_Heat_Conductivity();
+
+        void Write_to_File(std::ofstream &File_Handler, const char *Name);
 };
 
 long double Calc_Density(

@@ -1,6 +1,6 @@
 #include "Thermo_Physical_Properties/Combustion_Pellet.hpp"
 
-#include <iostream>
+// #include <iostream>
 
 Combustion_Pellet::Combustion_Pellet(
     long double D,
@@ -17,9 +17,9 @@ Combustion_Pellet::Combustion_Pellet(
     Radiative_Emissivity = 0;
     Ambient_Temperature = 297;
 
-    std::cout << "Density\t" << Pre_Heat_Zone.Get_Density() << '\t' << Reaction_Zone.Get_Density() << '\t' << Post_Combustion_Zone.Get_Density() << std::endl;
-    std::cout << "Heat Capacity\t" << Pre_Heat_Zone.Get_Heat_Capacity() << '\t' << Reaction_Zone.Get_Heat_Capacity() << '\t' << Post_Combustion_Zone.Get_Heat_Capacity() << std::endl;
-    std::cout << "Heat Conductivity\t" << Pre_Heat_Zone.Get_Heat_Conductivity() << '\t' << Reaction_Zone.Get_Heat_Conductivity() << '\t' << Post_Combustion_Zone.Get_Heat_Conductivity() << std::endl;
+    // std::cout << "Density\t" << Pre_Heat_Zone.Get_Density() << '\t' << Reaction_Zone.Get_Density() << '\t' << Post_Combustion_Zone.Get_Density() << std::endl;
+    // std::cout << "Heat Capacity\t" << Pre_Heat_Zone.Get_Heat_Capacity() << '\t' << Reaction_Zone.Get_Heat_Capacity() << '\t' << Post_Combustion_Zone.Get_Heat_Capacity() << std::endl;
+    // std::cout << "Heat Conductivity\t" << Pre_Heat_Zone.Get_Heat_Conductivity() << '\t' << Reaction_Zone.Get_Heat_Conductivity() << '\t' << Post_Combustion_Zone.Get_Heat_Conductivity() << std::endl;
 }
 
 void Combustion_Pellet::Set_Convective_Heat_Transfer_Coefficient(long double H)
@@ -181,6 +181,7 @@ void Combustion_Pellet::Setup_XM_Ambient_Heat_Loss_BC_Equation(
 )
 {
     long double lambda = z * (z-1) * Post_Combustion_Zone.Get_Heat_Conductivity() / 2 + z * (z-2) * Reaction_Zone.Get_Heat_Conductivity() / (-1) + (z-1) * (z-2) * Pre_Heat_Zone.Get_Heat_Conductivity() / 2; 
+    
     E = lambda / Dx;
     F = - (lambda / Dx) - Convective_Heat_Transfer_Coefficient - 4 * Radiative_Emissivity * Stefan_Boltzmann_Constant * pow(T, 3);
     G = 0;
@@ -191,3 +192,47 @@ long double Combustion_Pellet::Get_Pellet_Length()
 {
     return Length;
 }
+
+void Combustion_Pellet::Write_to_File(std::ofstream &file, const char *name)
+{
+    file << "Properties of " << name << std::endl;
+
+    file << "Diameter :\t" << Diameter << "\t m" << std::endl;
+    file << "Length :\t" << Length << "\t m" << std::endl;
+
+    file << std::endl;
+
+    Pre_Heat_Zone.Write_to_File(file, "Pre-Heat Zone Pellet");
+    Reaction_Zone.Write_to_File(file, "Reaction Zone Pellet");
+    Post_Combustion_Zone.Write_to_File(file, "Post-Combustion Zone Pellet");
+
+    file << "Pellet Environment" << std::endl;
+    file << "Ambient Temperature :\t" << Ambient_Temperature << "\t K" << std::endl;
+    file << "Radiative Emissivity :\t" << Radiative_Emissivity << std::endl;
+    file << "Convective Heat Transfer Coefficient :\t" << Convective_Heat_Transfer_Coefficient << "\t W / m2-K" << std::endl;
+
+    file << std::endl;
+}
+
+void Write_to_File(std::ofstream &file, const char *name, Substance s)
+{
+    file << std::endl << name << " Properties" << std::endl;
+
+    file << "Density :\t" << s.Get_Density() << "\t kg / m3" << std::endl;
+    file << "Heat Capacity :\t" << s.Get_Heat_Capacity() << "\t J / kg - K" << std::endl;
+    file << "Heat Conductivity :\t" << s.Get_Heat_Conductivity() << "\t W / m - K" << std::endl;
+
+    file << std::endl;
+}
+
+void Write_to_File(std::ofstream &file, const char *name, Coated_Particle s)
+{
+    file << std::endl << name << " Properties" << std::endl;
+
+    file << "Density :\t" << s.Get_Density() << "\t kg / m3" << std::endl;
+    file << "Heat Capacity :\t" << s.Get_Heat_Capacity() << "\t J / kg - K" << std::endl;
+    file << "Heat Conductivity :\t" << s.Get_Heat_Conductivity() << "\t W / m - K" << std::endl;
+
+    file << std::endl;
+}
+
