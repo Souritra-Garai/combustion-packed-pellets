@@ -1,11 +1,8 @@
-#include <sys/stat.h>
 #include <iostream>
-#include <fstream>
 #include <vector>
-#include <time.h>
-#include <string.h>
 
 #include "Combustion_Problem.hpp"
+#include "File_Utilities.hpp"
 
 #define MAX_TIME_ITER   10
 
@@ -90,30 +87,6 @@ Coated_Particle Post_Combustion_Zone_NiAl_Particle(
     Product_Particle_Overall_Diameter   // Overall Diameter
 );
 
-// Volume Fraction of Particles in the Pellet
-long double Particle_Volume_Fraction = 0.5;
-
-// Objects to hold Pellet Properties 
-// at respective temperature zones
-Pellet_Properties Pre_Heat_Zone_Pellet(
-    Pre_Heat_Zone_Ni_Coated_Al_Particle,    // Particle
-    Preheat_Zone_Argon,                     // Degassed Fluid Substance
-    Particle_Volume_Fraction                // Volume Fraction Occupied by Particle
-);
-
-Pellet_Properties Post_Combustion_Zone_Pellet(
-    Post_Combustion_Zone_NiAl_Particle,     // Particle
-    Post_Combustion_Zone_Argon,             // Degassed Fluid Substance
-    Particle_Volume_Fraction                // Volume Fraction Occupied by Particle
-);
-
-Reaction_Zone_Pellet_Properties Reaction_Zone_Pellet(
-    Reaction_Zone_Ni_Coated_Al_Particle,    // Particle A
-    Reaction_Zone_NiAl_Particle,            // Particle B
-    Reaction_Zone_Argon,                    // Degassed Fluid Substance
-    Particle_Volume_Fraction                // Volume Fraction Occupied by Particle
-);
-
 // Length and diameter of the combustion pellet
 long double Pellet_Length = 6.35E-3;    // m
 long double Pellet_Diameter = 6.35E-3;  // m
@@ -123,13 +96,6 @@ Kinetics Sundaram_et_al(
     465.23l * Concentration_Limiting_Agent,
     34.7E3l, 
     0
-);
-
-Reaction Combustion_Reaction(
-    Sundaram_et_al,
-    -118.4E3l,
-    Concentration_Limiting_Agent,
-    Particle_Volume_Fraction
 );
 
 // Matrix for Temperature at the grid points
@@ -145,6 +111,32 @@ long double Time_Step_Size = 0.2E-3;
 
 int main(int argc, char** argv)
 {   
+    // Volume Fraction of Particles in the Pellet
+    long double Particle_Volume_Fraction = 0.5;
+
+    // Objects to hold Pellet Properties 
+    // at respective temperature zones
+    Pellet_Properties Pre_Heat_Zone_Pellet(
+        Pre_Heat_Zone_Ni_Coated_Al_Particle,    // Particle
+        Preheat_Zone_Argon,                     // Degassed Fluid Substance
+        Particle_Volume_Fraction,               // Volume Fraction Occupied by Particle
+        Calc_Heat_Conductivity_Maxwell_Eucken_Model  // Heat Capacity Calculating Function
+    );
+
+    Pellet_Properties Post_Combustion_Zone_Pellet(
+        Post_Combustion_Zone_NiAl_Particle,     // Particle
+        Post_Combustion_Zone_Argon,             // Degassed Fluid Substance
+        Particle_Volume_Fraction,               // Volume Fraction Occupied by Particle
+        Calc_Heat_Conductivity_Maxwell_Eucken_Model  // Heat Capacity Calculating Function
+    );
+
+    Reaction_Zone_Pellet_Properties Reaction_Zone_Pellet(
+        Reaction_Zone_Ni_Coated_Al_Particle,    // Particle A
+        Reaction_Zone_NiAl_Particle,            // Particle B
+        Reaction_Zone_Argon,                    // Degassed Fluid Substance
+        Particle_Volume_Fraction,               // Volume Fraction Occupied by Particle
+        Calc_Heat_Conductivity_Maxwell_Eucken_Model  // Heat Capacity Calculating Function
+    );
     
     // Abstract object to represent all properties
     // of the combustion pellet
@@ -159,6 +151,13 @@ int main(int argc, char** argv)
     Pellet.Set_Ambient_Temperature(298);    // K
     Pellet.Set_Convective_Heat_Transfer_Coefficient(19.68); // W/m2-K
     Pellet.Set_Radiative_Emissivity(0.25);  // Dimensionless
+
+    Reaction Combustion_Reaction(
+        Sundaram_et_al,
+        -118.4E3l,
+        Concentration_Limiting_Agent,
+        Particle_Volume_Fraction
+    );
 
     Combustion_Problem my_Problem(
         No_Grid_Points,
@@ -210,67 +209,11 @@ int main(int argc, char** argv)
 
     std::cout << "Saving to file...\n";
 
-    time_t rawtime;
-    struct tm * timeinfo;
-    char folder[100] = "solutions/";
-    char T_file[100], Eta_file[100], config_file[100];
+    Make_Solution_Folder();
 
-    time ( &rawtime );
-    timeinfo = localtime ( &rawtime );
-
-    strcat(folder, asctime(timeinfo));
-    strcpy(T_file, folder);
-    strcpy(Eta_file, folder);
-    strcpy(config_file, folder);
-
-    mkdir(folder, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-
-    strcat(T_file, "/Temperature.csv");
-    std::ofstream file(T_file);
-
-    for (auto T_VECTOR = T_MATRIX.begin(); T_VECTOR < T_MATRIX.end(); T_VECTOR++)
-    {
-        for (auto T = T_VECTOR->begin(); T < T_VECTOR->end(); T++)
-        {
-            file << std::to_string((*T)) << ',';
-        }
-
-        file << std::endl;
-    }
-
-    file.close();
-
-    strcat(config_file, "/Combustion_Config.txt");
-    std::ofstream txt_file(config_file);
-
-    txt_file << "Number of Time Steps :\t" << n+1 << std::endl;
-
-    my_Problem.Write_to_File(txt_file);
-
-    Pellet.Write_to_File(txt_file, "Ni Coated Al Pellet degassed with Ar");
-
-    txt_file << "Pellet Volume Fraction Occupied by Solid Particles :\t" << Particle_Volume_Fraction << std::endl;
-
-    txt_file << std::endl;
-
-    Pre_Heat_Zone_Ni_Coated_Al_Particle.Write_to_File(txt_file, "Pre-Heat Zone Ni Coated Al Particle");
-    Reaction_Zone_Ni_Coated_Al_Particle.Write_to_File(txt_file, "Reaction Zone Ni Coated Al Particle");
-    Reaction_Zone_NiAl_Particle.Write_to_File(txt_file, "Reaction Zone Product NiAl Particle");
-    Post_Combustion_Zone_NiAl_Particle.Write_to_File(txt_file, "Post-Combustion Zone Product NiAl Particle");
-
-    Preheat_Zone_Aluminium.Write_to_File(txt_file, "Pre-Heat Zone Al");
-    Preheat_Zone_Nickel.Write_to_File(txt_file, "Pre-Heat Zone Ni");
-    Preheat_Zone_Argon.Write_to_File(txt_file, "Pre-Heat Zone Ar");
-
-    Reaction_Zone_Aluminium.Write_to_File(txt_file, "Reaction Zone Al");
-    Reaction_Zone_Nickel.Write_to_File(txt_file, "Reaction Zone Ni");
-    Reaction_Zone_NiAl.Write_to_File(txt_file, "Reaction Zone NiAl");
-    Reaction_Zone_Argon.Write_to_File(txt_file, "Reaction Zone Ar");
-
-    Post_Combustion_Zone_NiAl.Write_to_File(txt_file, "Post-Combustion Zone NiAl");
-    Post_Combustion_Zone_Argon.Write_to_File(txt_file, "Post-Combustion Zone Ar");
-
-    txt_file.close();
+    Save_Temperature_Data(T_MATRIX);
+    Save_Conversion_Data(ETA_MATRIX);
+    Save_Combustion_Config(n, Particle_Volume_Fraction, Pellet, my_Problem);    
 
     std::cout << "Solution saved to file.." << std::endl;
 

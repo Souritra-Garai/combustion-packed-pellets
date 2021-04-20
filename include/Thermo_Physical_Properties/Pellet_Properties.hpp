@@ -5,6 +5,10 @@
 
 #include "Thermo_Physical_Properties/Coated_Particle.hpp"
 
+// Volume fraction of particles in 
+// Maxwell Eucken Structure
+#define ALPHA_P_ME 0.7l
+
 class Pellet_Properties
 {
     private:
@@ -18,7 +22,12 @@ class Pellet_Properties
         Pellet_Properties(
             Coated_Particle Particle,
             Substance Degassed_Fluid,
-            long double Packing_Volume_Fraction
+            long double Packing_Volume_Fraction,
+            long double (*Heat_Capacity_Calculating_Function) (
+                long double Particle_Volume_Fraction,
+                long double Particle_Heat_Conductivity,
+                long double Degassed_Fluid_Heat_Conductivity
+            )
         );
 
         long double Get_Density();
@@ -42,7 +51,12 @@ class Reaction_Zone_Pellet_Properties
             Coated_Particle Reactant,
             Coated_Particle Product,
             Substance Degassed_Fluid,
-            long double Packing_Volume_Fraction
+            long double Packing_Volume_Fraction,
+            long double (*Heat_Capacity_Calculating_Function) (
+                long double Particle_Volume_Fraction,
+                long double Particle_Heat_Conductivity,
+                long double Degassed_Fluid_Heat_Conductivity
+            )
         );
 
         long double Get_Density();
@@ -72,9 +86,14 @@ long double Calc_Heat_Conductivity_Bruggemann_Model(
     long double Degassed_Fluid_Heat_Conductivity
 );
 
+long double Calc_Heat_Conductivity_Maxwell_Eucken_Model(
+    long double Particle_Volume_Fraction,
+    long double Particle_Heat_Conductivity,
+    long double Degassed_Fluid_Heat_Conductivity
+);
+
 long double Calc_Heat_Conductivity_Maxwell_Eucken_Bruggemann_Model(
     long double Particle_Volume_Fraction,
-    long double Particle_Volume_Fraction_Maxwell_Eucken_Structure,
     long double Particle_Heat_Conductivity,
     long double Degassed_Fluid_Heat_Conductivity
 );

@@ -25,7 +25,7 @@ $(TARGET) : $(OBJECTS)
 	@echo "\nLinking all...";
 	$(CC) $(OBJECTS) $(CFLAGS) $(LIB) -o $(TARGET)
 
-$(BUILDDIR)/main.o : $(SRCDIR)/main.cpp $(INCDIR)/Combustion_Problem.hpp
+$(BUILDDIR)/main.o : $(SRCDIR)/main.cpp $(INCDIR)/Combustion_Problem.hpp $(INCDIR)/File_Utilities.hpp
 	@mkdir -p $(BUILDDIR);
 	@echo "\nCompiling main...";
 	$(CC) $(CFLAGS) $(INC) -c $(SRCDIR)/main.cpp -o $(BUILDDIR)/main.o
@@ -69,6 +69,12 @@ $(BUILDDIR)/Kinetics.o : $(SRCDIR)/Kinetics.cpp $(INCDIR)/Kinetics/Kinetics.hpp
 	@mkdir -p $(BUILDDIR);
 	@echo "\nCompiling Kinetics...";
 	$(CC) $(CFLAGS) $(INC) -c $(SRCDIR)/Kinetics.cpp -o $(BUILDDIR)/Kinetics.o
+
+$(BUILDDIR)/File_Utilities.o : $(SRCDIR)/File_Utilities.cpp $(INCDIR)/File_Utilities.hpp
+	@mkdir -p $(BUILDDIR);
+	@echo "\nCompiling File Utilities...";
+	$(CC) $(CFLAGS) $(INC) -c $(SRCDIR)/File_Utilities.cpp -o $(BUILDDIR)/File_Utilities.o
+
 
 clean:
 	@echo "\nCleaning..."; 

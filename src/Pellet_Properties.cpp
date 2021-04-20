@@ -1,10 +1,15 @@
 #include "Thermo_Physical_Properties/Pellet_Properties.hpp"
 
-Pellet_Properties::Pellet_Properties(Coated_Particle P, Substance F, long double phi)
+Pellet_Properties::Pellet_Properties(
+    Coated_Particle P,
+    Substance F,
+    long double phi,
+    long double (*f) (long double, long double, long double)
+)
 {
     Density             = Calc_Density(phi, P.Get_Density(), F.Get_Density());
     Heat_Capacity       = Calc_Heat_Capacity(phi, P.Get_Density(), P.Get_Heat_Capacity(), F.Get_Density(), F.Get_Heat_Capacity());
-    Heat_Conductivity   = Calc_Heat_Conductivity_Maxwell_Eucken_Bruggemann_Model(phi, 0.5, P.Get_Heat_Conductivity(), F.Get_Heat_Conductivity());
+    Heat_Conductivity   = f(phi, P.Get_Heat_Conductivity(), F.Get_Heat_Conductivity());
 }
 
 long double Pellet_Properties::Get_Density()
@@ -22,7 +27,13 @@ long double Pellet_Properties::Get_Heat_Conductivity()
     return Heat_Conductivity;
 }
 
-Reaction_Zone_Pellet_Properties::Reaction_Zone_Pellet_Properties(Coated_Particle R, Coated_Particle P, Substance F, long double phi)
+Reaction_Zone_Pellet_Properties::Reaction_Zone_Pellet_Properties(
+    Coated_Particle R, 
+    Coated_Particle P, 
+    Substance F, 
+    long double phi,
+    long double (*f) (long double, long double, long double)
+)
 {
     long double rho_P       = 0.5 * (R.Get_Density() + P.Get_Density());
     long double C_P         = 0.5 * (R.Get_Heat_Capacity() + P.Get_Heat_Capacity());
@@ -30,7 +41,7 @@ Reaction_Zone_Pellet_Properties::Reaction_Zone_Pellet_Properties(Coated_Particle
 
     Density             = Calc_Density(phi, rho_P, F.Get_Density());
     Heat_Capacity       = Calc_Heat_Capacity(phi, rho_P, C_P, F.Get_Density(), F.Get_Heat_Capacity());
-    Heat_Conductivity   = Calc_Heat_Conductivity_Maxwell_Eucken_Bruggemann_Model(phi, 0.5, lambda_P, F.Get_Heat_Conductivity());
+    Heat_Conductivity   = f(phi, lambda_P, F.Get_Heat_Conductivity());
 }
 
 long double Reaction_Zone_Pellet_Properties::Get_Density()
@@ -68,11 +79,19 @@ long double Calc_Heat_Conductivity_Bruggemann_Model(long double phi_p, long doub
     return (lambda_f/4) * ((3*phi_p - 1)*(lambda_p / lambda_f) + 2 - 3*phi_p + sqrt(D));
 }
 
-long double Calc_Heat_Conductivity_Maxwell_Eucken_Bruggemann_Model(long double phi_p, long double alpha_p_ME, long double lambda_p, long double lambda_f)
+long double Calc_Heat_Conductivity_Maxwell_Eucken_Model(long double phi_p, long double lambda_p, long double lambda_f)
+{
+    long double phi_f = 1 - phi_p;
+    long double phi_p_frac = phi_p * (3 * lambda_f / (2*lambda_f + lambda_p));
+
+    return (phi_f * lambda_f + phi_p_frac * lambda_p) / (phi_f + phi_p_frac);
+}
+
+long double Calc_Heat_Conductivity_Maxwell_Eucken_Bruggemann_Model(long double phi_p, long double lambda_p, long double lambda_f)
 {
     long double phi_f = 1 - phi_p;
 
-    long double D = (2*lambda_p - lambda_f) * phi_p * (1 - alpha_p_ME) + (2*lambda_f - lambda_p) * ( (phi_f + phi_p*alpha_p_ME - 0.5) / phi_f );
+    long double D = (2*lambda_p - lambda_f) * phi_p * (1 - ALPHA_P_ME) + (2*lambda_f - lambda_p) * ( (phi_f + phi_p*ALPHA_P_ME - 0.5) / phi_f );
 
     return 0.5 * ( D + sqrt(pow(D, 2) + 2*lambda_p*lambda_f) );
 }
