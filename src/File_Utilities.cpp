@@ -13,7 +13,11 @@ void Make_Solution_Folder()
     time ( &rawtime );
     timeinfo = localtime ( &rawtime );
 
+    char *curr_time = asctime(timeinfo);
+    curr_time[strlen(curr_time) - 1] = '\0';
+
     strcat(folder, asctime(timeinfo));
+
     strcpy(T_file, folder);
     strcpy(Eta_file, folder);
     strcpy(config_file, folder);

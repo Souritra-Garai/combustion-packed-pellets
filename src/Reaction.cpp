@@ -15,15 +15,15 @@ std::pair<long double, long double> Reaction::Get_Linear_Expression(
     long double Dt
 )
 {
-    std::pair<long double, long double> partial_derivatives = Reaction_Kinetics.Get_Partial_Derivative_Reaction_Rate(Initial_Concentration * (1 - eta), T);
+    std::pair<long double, long double> partial_derivatives = Reaction_Kinetics.Get_Partial_Derivative_Conversion_Rate(eta, T);
 
-    long double r_A = Reaction_Kinetics.Get_Reaction_Rate(Initial_Concentration * (1 - eta), T);
+    long double omega_prev = Reaction_Kinetics.Get_Conversion_Rate(eta, T);
 
     long double mDH_phi_CA0 = - Enthalpy_of_Reaction * Particle_Volume_Fraction * Initial_Concentration;
 
-    long double gamma = - (r_A - T * partial_derivatives.second) / (Initial_Concentration * (1 - Dt * partial_derivatives.first));
+    long double gamma = (omega_prev - T * partial_derivatives.second) / (1 - Dt * partial_derivatives.first);
 
-    long double kappa = - partial_derivatives.second / (Initial_Concentration * (1 - Dt * partial_derivatives.first));
+    long double kappa = partial_derivatives.second / (1 - Dt * partial_derivatives.first);
 
     // std::cout << "Partial Derivatives\t" << partial_derivatives.first << '\t' << partial_derivatives.second << std::endl;
 
@@ -37,5 +37,5 @@ std::pair<long double, long double> Reaction::Get_Linear_Expression(
 
 void Reaction::Update_Conversion(long double &eta, long double T, long double Dt)
 {
-    eta += - Reaction_Kinetics.Get_Reaction_Rate(Initial_Concentration * (1 - eta), T) * Dt / Initial_Concentration;
+    eta += Reaction_Kinetics.Get_Conversion_Rate(eta, T) * Dt;
 }

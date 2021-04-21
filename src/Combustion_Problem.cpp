@@ -1,5 +1,5 @@
 #include "Combustion_Problem.hpp"
-#include <iostream>
+// #include <iostream>
 
 // #include <iterator> // needed for std::ostram_iterator
 
@@ -91,7 +91,7 @@ void Combustion_Problem::Setup_Solver()
         std::pair<long double, long double> Reaction_Terms = Combustion_Reaction.Get_Linear_Expression(*T, *ETA, Delta_t);
 
         // std::cout << "In Reaction Zone" << std::endl;
-        // std::cout << Reaction_Terms.first << '\t' << Reaction_Terms.second << std::endl;
+        // std::cout << - Reaction_Terms.second << '\t' << Reaction_Terms.first << std::endl;
         // std::cout << *F << '\t' << *B << std::endl;
 
         *F += - Reaction_Terms.second;

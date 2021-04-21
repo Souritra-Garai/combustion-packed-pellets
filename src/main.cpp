@@ -4,11 +4,18 @@
 #include "Combustion_Problem.hpp"
 #include "File_Utilities.hpp"
 
-#define MAX_TIME_ITER   10
+#define MAX_TIME_ITER   10000
+#define NO_GRID_POINTS  1001
+
+#define IGNITION_LENGTH 1.5E-3  //  m
 
 #define MOL_WT_Al   26.98154E-3 // kg / mol
 #define MOL_WT_Ni   58.69E-3    // kg / mol
 #define MOL_WT_Ar   39.9E-3     // kg / mol
+
+#define ENTHALPY_CHANGE_COMBUSTION_REACTION  -118.4E3l   // J / mol.
+
+#define HEAT_CONDUCTIVITY_CALC_FUNC Calc_Heat_Conductivity_Bruggemann_Model
 
 // Declaring objects for holding
 // Density (kg/m3), Heat Capacity (J/kg-K), Heat Conductivity (W/m-K), Molecular Weight (kg/mol)
@@ -91,11 +98,13 @@ Coated_Particle Post_Combustion_Zone_NiAl_Particle(
 long double Pellet_Length = 6.35E-3;    // m
 long double Pellet_Diameter = 6.35E-3;  // m
 
+// Object to model kinetics for the Ni-Al reaction
 Kinetics Sundaram_et_al(
-    "Sundaram et al 2013",
-    465.23l * Concentration_Limiting_Agent,
-    34.7E3l, 
-    0
+    "Sundaram et al 2013",  //  Name of Kinetics Model
+    465.23l,                //  Pre - Exponential Factor
+    34.7E3l,                //  Activation Energy
+    0,                      //  Reaction Order in (1 - eta)
+    0                       //  Reaction Order in eta
 );
 
 // Matrix for Temperature at the grid points
@@ -106,8 +115,8 @@ std::vector<std::vector<long double>> T_MATRIX;
 // for each time point
 std::vector<std::vector<long double>> ETA_MATRIX;
 
-unsigned int No_Grid_Points = 11;
-long double Time_Step_Size = 0.2E-3;
+unsigned int No_Grid_Points = NO_GRID_POINTS;
+long double Time_Step_Size = 0.0002;
 
 int main(int argc, char** argv)
 {   
@@ -120,14 +129,14 @@ int main(int argc, char** argv)
         Pre_Heat_Zone_Ni_Coated_Al_Particle,    // Particle
         Preheat_Zone_Argon,                     // Degassed Fluid Substance
         Particle_Volume_Fraction,               // Volume Fraction Occupied by Particle
-        Calc_Heat_Conductivity_Maxwell_Eucken_Model  // Heat Capacity Calculating Function
+        HEAT_CONDUCTIVITY_CALC_FUNC  // Heat Capacity Calculating Function
     );
 
     Pellet_Properties Post_Combustion_Zone_Pellet(
         Post_Combustion_Zone_NiAl_Particle,     // Particle
         Post_Combustion_Zone_Argon,             // Degassed Fluid Substance
         Particle_Volume_Fraction,               // Volume Fraction Occupied by Particle
-        Calc_Heat_Conductivity_Maxwell_Eucken_Model  // Heat Capacity Calculating Function
+        HEAT_CONDUCTIVITY_CALC_FUNC  // Heat Capacity Calculating Function
     );
 
     Reaction_Zone_Pellet_Properties Reaction_Zone_Pellet(
@@ -135,7 +144,7 @@ int main(int argc, char** argv)
         Reaction_Zone_NiAl_Particle,            // Particle B
         Reaction_Zone_Argon,                    // Degassed Fluid Substance
         Particle_Volume_Fraction,               // Volume Fraction Occupied by Particle
-        Calc_Heat_Conductivity_Maxwell_Eucken_Model  // Heat Capacity Calculating Function
+        HEAT_CONDUCTIVITY_CALC_FUNC  // Heat Capacity Calculating Function
     );
     
     // Abstract object to represent all properties
@@ -152,38 +161,39 @@ int main(int argc, char** argv)
     Pellet.Set_Convective_Heat_Transfer_Coefficient(19.68); // W/m2-K
     Pellet.Set_Radiative_Emissivity(0.25);  // Dimensionless
 
+    // Interface between kinetics and combustion problem solver
     Reaction Combustion_Reaction(
-        Sundaram_et_al,
-        -118.4E3l,
-        Concentration_Limiting_Agent,
-        Particle_Volume_Fraction
+        Sundaram_et_al,                         // Kinetics model
+        ENTHALPY_CHANGE_COMBUSTION_REACTION,    // Enthalpy change for the reaction
+        Concentration_Limiting_Agent,           // Concentration of the limiting agent
+        Particle_Volume_Fraction                // Volume fraction occupied by Particle
     );
 
-    Combustion_Problem my_Problem(
-        No_Grid_Points,
-        Time_Step_Size,
-        Pellet,
-        Combustion_Reaction,
-        933,
-        1911
+    Combustion_Problem Ni_Al_Pellet_Combustion(
+        No_Grid_Points,         // Number of grid points in x-axis (including both boundary points)
+        Time_Step_Size,         // Length of Time Steps
+        Pellet,                 // Combustion_Pellet object holding pellet properties at different temperature zones
+        Combustion_Reaction,    // Reaction object serving as interface between Kinetics and Combustion_Problem
+        933,                    // Ignition temperature defining the reaction zone
+        1911                    // Adiabatic Combustion Temperature
     );
 
     std::cout << "Initialised Problem" << std::endl;
 
-    std::vector<long double> Temperature_Array(No_Grid_Points, 298);
-
-    std::vector<long double> Conversion_Array(No_Grid_Points, 0);
+    // Setting up the initial conditions
+    std::vector<long double> Temperature_Array  (No_Grid_Points, 298);
+    std::vector<long double> Conversion_Array   (No_Grid_Points, 0.000001);
 
     Temperature_Array[0] = 1911;
-    Conversion_Array[0] = 1;
+    Conversion_Array[0] = 0.999999;
 
-    for (int i = 1; i < 1; i++)
+    for (int i = 1; i * (Pellet_Length / (No_Grid_Points-1)) < IGNITION_LENGTH; i++)
     {
         Temperature_Array[i] = 933;
-        Conversion_Array[i] = 0;
+        // Conversion_Array[i] = 0;
     }
 
-    my_Problem.Set_Initial_Conditions(Temperature_Array, Conversion_Array);
+    Ni_Al_Pellet_Combustion.Set_Initial_Conditions(Temperature_Array, Conversion_Array);
 
     T_MATRIX.push_back(Temperature_Array);
     ETA_MATRIX.push_back(Conversion_Array);
@@ -196,7 +206,7 @@ int main(int argc, char** argv)
     {
         std::cout << "Time step : " << (n+1) * Time_Step_Size << " s" << std::endl;
 
-        std::pair<std::vector<long double>, std::vector<long double>> Buffer = my_Problem.Iterate();
+        std::pair<std::vector<long double>, std::vector<long double>> Buffer = Ni_Al_Pellet_Combustion.Iterate();
 
         T_MATRIX.push_back(Buffer.first);
         ETA_MATRIX.push_back(Buffer.second);
@@ -205,7 +215,7 @@ int main(int argc, char** argv)
 
         std::cout << "Completed " << n << " iterations\n" << std::endl;
 
-    } while (n < MAX_TIME_ITER && my_Problem.Combustion_Not_Completed());
+    } while (n < MAX_TIME_ITER && Ni_Al_Pellet_Combustion.Combustion_Not_Completed());
 
     std::cout << "Saving to file...\n";
 
@@ -213,7 +223,7 @@ int main(int argc, char** argv)
 
     Save_Temperature_Data(T_MATRIX);
     Save_Conversion_Data(ETA_MATRIX);
-    Save_Combustion_Config(n, Particle_Volume_Fraction, Pellet, my_Problem);    
+    Save_Combustion_Config(n, Particle_Volume_Fraction, Pellet, Ni_Al_Pellet_Combustion);    
 
     std::cout << "Solution saved to file.." << std::endl;
 
