@@ -7,7 +7,7 @@
 #define MAX_TIME_ITER   10000
 #define NO_GRID_POINTS  1001
 
-#define IGNITION_LENGTH 1.5E-3  //  m
+#define IGNITION_LENGTH 0.5E-3  //  m
 
 #define MOL_WT_Al   26.98154E-3 // kg / mol
 #define MOL_WT_Ni   58.69E-3    // kg / mol
@@ -99,13 +99,38 @@ long double Pellet_Length = 6.35E-3;    // m
 long double Pellet_Diameter = 6.35E-3;  // m
 
 // Object to model kinetics for the Ni-Al reaction
-Kinetics Sundaram_et_al(
-    "Sundaram et al 2013",  //  Name of Kinetics Model
-    465.23l,                //  Pre - Exponential Factor
-    34.7E3l,                //  Activation Energy
+// Kinetics Sundaram_et_al(
+//     "Sundaram et al 2013",  //  Name of Kinetics Model
+//     465.23l,                //  Pre - Exponential Factor
+//     34.7E3l,                //  Activation Energy
+//     0,                      //  Reaction Order in (1 - eta)
+//     0                       //  Reaction Order in eta
+// );
+
+// Object to model kinetics for the Ni-Al reaction
+Kinetics Du_et_al(
+    "Du et al 2013",  //  Name of Kinetics Model
+    541.92l,                //  Pre - Exponential Factor
+    26.0E3l,                //  Activation Energy
     0,                      //  Reaction Order in (1 - eta)
     0                       //  Reaction Order in eta
 );
+
+// Kinetics White_et_al(
+//     "White et al 2009",     //  Name of Kinetics Model
+//     3.7E19l,                //  Pre - Exponential Factor
+//     347.29E3l,              //  Activation Energy
+//     1,                      //  Reaction Order in (1 - eta)
+//     0                       //  Reaction Order in eta
+// );
+
+// Kinetics Maiti_et_al(
+//     "Maiti et al 2015",     //  Name of Kinetics Model
+//     2.215E25,               //  Pre - Exponential Factor
+//     448.4E3l,               //  Activation Energy
+//     0.439,                  //  Reaction Order in (1 - eta)
+//     1.5                     //  Reaction Order in eta
+// );
 
 // Matrix for Temperature at the grid points
 // for each time point
@@ -116,7 +141,7 @@ std::vector<std::vector<long double>> T_MATRIX;
 std::vector<std::vector<long double>> ETA_MATRIX;
 
 unsigned int No_Grid_Points = NO_GRID_POINTS;
-long double Time_Step_Size = 0.0002;
+long double Time_Step_Size = 0.00002;
 
 int main(int argc, char** argv)
 {   
@@ -129,14 +154,14 @@ int main(int argc, char** argv)
         Pre_Heat_Zone_Ni_Coated_Al_Particle,    // Particle
         Preheat_Zone_Argon,                     // Degassed Fluid Substance
         Particle_Volume_Fraction,               // Volume Fraction Occupied by Particle
-        HEAT_CONDUCTIVITY_CALC_FUNC  // Heat Capacity Calculating Function
+        HEAT_CONDUCTIVITY_CALC_FUNC             // Heat Capacity Calculating Function
     );
 
     Pellet_Properties Post_Combustion_Zone_Pellet(
         Post_Combustion_Zone_NiAl_Particle,     // Particle
         Post_Combustion_Zone_Argon,             // Degassed Fluid Substance
         Particle_Volume_Fraction,               // Volume Fraction Occupied by Particle
-        HEAT_CONDUCTIVITY_CALC_FUNC  // Heat Capacity Calculating Function
+        HEAT_CONDUCTIVITY_CALC_FUNC             // Heat Capacity Calculating Function
     );
 
     Reaction_Zone_Pellet_Properties Reaction_Zone_Pellet(
@@ -144,7 +169,7 @@ int main(int argc, char** argv)
         Reaction_Zone_NiAl_Particle,            // Particle B
         Reaction_Zone_Argon,                    // Degassed Fluid Substance
         Particle_Volume_Fraction,               // Volume Fraction Occupied by Particle
-        HEAT_CONDUCTIVITY_CALC_FUNC  // Heat Capacity Calculating Function
+        HEAT_CONDUCTIVITY_CALC_FUNC             // Heat Capacity Calculating Function
     );
     
     // Abstract object to represent all properties
@@ -163,7 +188,10 @@ int main(int argc, char** argv)
 
     // Interface between kinetics and combustion problem solver
     Reaction Combustion_Reaction(
-        Sundaram_et_al,                         // Kinetics model
+        // Sundaram_et_al,                         // Kinetics model
+        Du_et_al,                               // Kinetics model
+        // White_et_al,                            // Kinetics model
+        // Maiti_et_al,                            // Kinetics model
         ENTHALPY_CHANGE_COMBUSTION_REACTION,    // Enthalpy change for the reaction
         Concentration_Limiting_Agent,           // Concentration of the limiting agent
         Particle_Volume_Fraction                // Volume fraction occupied by Particle
@@ -189,7 +217,7 @@ int main(int argc, char** argv)
 
     for (int i = 1; i * (Pellet_Length / (No_Grid_Points-1)) < IGNITION_LENGTH; i++)
     {
-        Temperature_Array[i] = 933;
+        Temperature_Array[i] = 1200;
         // Conversion_Array[i] = 0;
     }
 

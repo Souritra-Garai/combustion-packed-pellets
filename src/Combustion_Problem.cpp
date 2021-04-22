@@ -76,6 +76,8 @@ void Combustion_Problem::Setup_Solver()
 {
     Reset_Equation_Iterators();
 
+    // Pellet.Setup_X0_Isothermal_BC_Equation(*E, *F, *G, *B, *T, Delta_x, Delta_t);
+    // Pellet.Setup_X0_Adiabatic_Wall_BC_Equation(*E, *F, *G, *B, *T, Delta_x, Delta_t);
     Pellet.Setup_X0_Ambient_Heat_Loss_BC_Equation(*E, *F, *G, *B, *T, Delta_x, Delta_t);
 
     Increment_Equation_Iterators();
@@ -103,6 +105,7 @@ void Combustion_Problem::Setup_Solver()
         Pellet.Setup_Pre_Heat_Zone_Equation(*E, *F, *G, *B, *T, Delta_x, Delta_t);
 
     int zone = In_Reaction_Zone(*T) ? (In_Post_Combustion_Zone(*ETA, *T) ? 2 : 1) : 0;
+    // Pellet.Setup_XM_Adiabatic_Wall_BC_Equation(*E, *F, *G, *B, *T, Delta_x, Delta_t);
     Pellet.Setup_XM_Ambient_Heat_Loss_BC_Equation(*E, *F, *G, *B, *T, Delta_x, Delta_t, zone);
 
     // std::cout << E_VECTOR << std::endl;

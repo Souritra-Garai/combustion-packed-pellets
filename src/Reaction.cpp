@@ -37,5 +37,9 @@ std::pair<long double, long double> Reaction::Get_Linear_Expression(
 
 void Reaction::Update_Conversion(long double &eta, long double T, long double Dt)
 {
-    eta += Reaction_Kinetics.Get_Conversion_Rate(eta, T) * Dt;
+    long double omega_derivative = Reaction_Kinetics.Get_Partial_Derivative_Conversion_Rate(eta, T).first;
+
+    long double omega_prev = Reaction_Kinetics.Get_Conversion_Rate(eta, T);
+
+    eta = (eta + (omega_prev - eta * omega_derivative) * Dt) / (1 - omega_derivative * Dt);
 }

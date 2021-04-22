@@ -66,7 +66,7 @@ ax1.set_zlabel('Temperature (K)')
 
 ax1.set_title('Temperature Evolution in the Pellet')
 
-# ax.set_zlim([250, 2500])
+ax1.set_zlim([250, 2500])
 # ax.set_zscale('log')
 
 ax2 = fig.add_subplot(1, 2, 2)
@@ -75,9 +75,13 @@ combustion_front = []
 
 for eta in X :
 
-    eta = eta[:-1] - eta[1:]
+    for i in range(M) :
 
-    combustion_front.append(np.argmax(eta) * Dx)
+        if np.isclose(eta[i], 0.000001) :
+
+            break
+
+    combustion_front.append(i*Dx)
 
 ax2.plot(t, combustion_front, color='black')
 
