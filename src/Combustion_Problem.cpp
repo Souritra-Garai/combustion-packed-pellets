@@ -77,8 +77,8 @@ void Combustion_Problem::Setup_Solver()
     Reset_Equation_Iterators();
 
     // Pellet.Setup_X0_Isothermal_BC_Equation(*E, *F, *G, *B, *T, Delta_x, Delta_t);
-    // Pellet.Setup_X0_Adiabatic_Wall_BC_Equation(*E, *F, *G, *B, *T, Delta_x, Delta_t);
-    Pellet.Setup_X0_Ambient_Heat_Loss_BC_Equation(*E, *F, *G, *B, *T, Delta_x, Delta_t);
+    Pellet.Setup_X0_Adiabatic_Wall_BC_Equation(*E, *F, *G, *B, *T, Delta_x, Delta_t);
+    // Pellet.Setup_X0_Ambient_Heat_Loss_BC_Equation(*E, *F, *G, *B, *T, Delta_x, Delta_t);
 
     Increment_Equation_Iterators();
 

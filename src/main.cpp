@@ -4,10 +4,10 @@
 #include "Combustion_Problem.hpp"
 #include "File_Utilities.hpp"
 
-#define MAX_TIME_ITER   10000
+#define MAX_TIME_ITER   1000000
 #define NO_GRID_POINTS  1001
 
-#define IGNITION_LENGTH 0.5E-3  //  m
+#define IGNITION_LENGTH 0.8E-3  //  m
 
 #define MOL_WT_Al   26.98154E-3 // kg / mol
 #define MOL_WT_Ni   58.69E-3    // kg / mol
@@ -107,11 +107,18 @@ long double Pellet_Diameter = 6.35E-3;  // m
 //     0                       //  Reaction Order in eta
 // );
 
-// Object to model kinetics for the Ni-Al reaction
-Kinetics Du_et_al(
-    "Du et al 2013",  //  Name of Kinetics Model
-    541.92l,                //  Pre - Exponential Factor
-    26.0E3l,                //  Activation Energy
+// Kinetics Du_et_al(
+//     "Du et al 2003",  //  Name of Kinetics Model
+//     541.92l,                //  Pre - Exponential Factor
+//     26.0E3l,                //  Activation Energy
+//     0,                      //  Reaction Order in (1 - eta)
+//     0                       //  Reaction Order in eta
+// );
+
+Kinetics Alawieh_et_al(
+    "Alawieh et al 2003",   //  Name of Kinetics Model
+    12383.0l,               //  Pre - Exponential Factor
+    137.0E3l,               //  Activation Energy
     0,                      //  Reaction Order in (1 - eta)
     0                       //  Reaction Order in eta
 );
@@ -141,12 +148,12 @@ std::vector<std::vector<long double>> T_MATRIX;
 std::vector<std::vector<long double>> ETA_MATRIX;
 
 unsigned int No_Grid_Points = NO_GRID_POINTS;
-long double Time_Step_Size = 0.00002;
+long double Time_Step_Size = 0.000002;
 
 int main(int argc, char** argv)
 {   
     // Volume Fraction of Particles in the Pellet
-    long double Particle_Volume_Fraction = 0.5;
+    long double Particle_Volume_Fraction = 0.7;
 
     // Objects to hold Pellet Properties 
     // at respective temperature zones
@@ -189,7 +196,8 @@ int main(int argc, char** argv)
     // Interface between kinetics and combustion problem solver
     Reaction Combustion_Reaction(
         // Sundaram_et_al,                         // Kinetics model
-        Du_et_al,                               // Kinetics model
+        // Du_et_al,                               // Kinetics model
+        Alawieh_et_al,                          // Kinetics model
         // White_et_al,                            // Kinetics model
         // Maiti_et_al,                            // Kinetics model
         ENTHALPY_CHANGE_COMBUSTION_REACTION,    // Enthalpy change for the reaction
@@ -217,7 +225,7 @@ int main(int argc, char** argv)
 
     for (int i = 1; i * (Pellet_Length / (No_Grid_Points-1)) < IGNITION_LENGTH; i++)
     {
-        Temperature_Array[i] = 1200;
+        Temperature_Array[i] = 933;
         // Conversion_Array[i] = 0;
     }
 

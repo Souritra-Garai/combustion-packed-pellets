@@ -38,6 +38,9 @@ build/
 # vscode folder
 .vscode/
 
+# Solutions directory
+solutions/
+
 © 2021 GitHub, Inc.
 Terms
 Privacy
