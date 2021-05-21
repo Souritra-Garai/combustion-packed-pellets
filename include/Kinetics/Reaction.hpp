@@ -29,7 +29,16 @@ class Reaction
             long double Temperature,
             long double Conversion,
             long double Delta_t
-        );        
+        );
+
+        long double Get_Omega(
+            long double Temperature,
+            long double Conversion
+        );
+
+        long double Get_Energy_Gen_Rate(
+            long double Omega
+        );
 
         void Update_Conversion(
             long double &Conversion,

@@ -5,7 +5,7 @@
 #include "File_Utilities.hpp"
 
 #define MAX_TIME_ITER   1000000
-#define NO_GRID_POINTS  1001
+#define NO_GRID_POINTS  101
 
 #define IGNITION_LENGTH 0.8E-3  //  m
 
@@ -107,21 +107,21 @@ long double Pellet_Diameter = 6.35E-3;  // m
 //     0                       //  Reaction Order in eta
 // );
 
-// Kinetics Du_et_al(
-//     "Du et al 2003",  //  Name of Kinetics Model
-//     541.92l,                //  Pre - Exponential Factor
-//     26.0E3l,                //  Activation Energy
-//     0,                      //  Reaction Order in (1 - eta)
-//     0                       //  Reaction Order in eta
-// );
-
-Kinetics Alawieh_et_al(
-    "Alawieh et al 2003",   //  Name of Kinetics Model
-    12383.0l,               //  Pre - Exponential Factor
-    137.0E3l,               //  Activation Energy
+Kinetics Du_et_al(
+    "Du et al 2003",  //  Name of Kinetics Model
+    541.92l,                //  Pre - Exponential Factor
+    26.0E3l,                //  Activation Energy
     0,                      //  Reaction Order in (1 - eta)
     0                       //  Reaction Order in eta
 );
+
+// Kinetics Alawieh_et_al(
+//     "Alawieh et al 2003",   //  Name of Kinetics Model
+//     12383.0l,               //  Pre - Exponential Factor
+//     137.0E3l,               //  Activation Energy
+//     0,                      //  Reaction Order in (1 - eta)
+//     0                       //  Reaction Order in eta
+// );
 
 // Kinetics White_et_al(
 //     "White et al 2009",     //  Name of Kinetics Model
@@ -196,8 +196,8 @@ int main(int argc, char** argv)
     // Interface between kinetics and combustion problem solver
     Reaction Combustion_Reaction(
         // Sundaram_et_al,                         // Kinetics model
-        // Du_et_al,                               // Kinetics model
-        Alawieh_et_al,                          // Kinetics model
+        Du_et_al,                               // Kinetics model
+        // Alawieh_et_al,                          // Kinetics model
         // White_et_al,                            // Kinetics model
         // Maiti_et_al,                            // Kinetics model
         ENTHALPY_CHANGE_COMBUSTION_REACTION,    // Enthalpy change for the reaction
@@ -240,28 +240,30 @@ int main(int argc, char** argv)
 
     do
     {
-        std::cout << "Time step : " << (n+1) * Time_Step_Size << " s" << std::endl;
+        if (n % 100 == 0) std::cout << "Time step : " << (n+1) * Time_Step_Size << " s" << std::endl;
 
-        std::pair<std::vector<long double>, std::vector<long double>> Buffer = Ni_Al_Pellet_Combustion.Iterate();
+        // std::pair<std::vector<long double>, std::vector<long double>> Buffer = Ni_Al_Pellet_Combustion.Iterate();
 
-        T_MATRIX.push_back(Buffer.first);
-        ETA_MATRIX.push_back(Buffer.second);
+        // T_MATRIX.push_back(Buffer.first);
+        // ETA_MATRIX.push_back(Buffer.second);
+
+        Ni_Al_Pellet_Combustion.Solve_and_Update_State();
 
         n++;
 
-        std::cout << "Completed " << n << " iterations\n" << std::endl;
+        if (n % 100 == 0) std::cout << "Completed " << n << " iterations\n" << std::endl;
 
     } while (n < MAX_TIME_ITER && Ni_Al_Pellet_Combustion.Combustion_Not_Completed());
 
-    std::cout << "Saving to file...\n";
+    // std::cout << "Saving to file...\n";
 
-    Make_Solution_Folder();
+    // Make_Solution_Folder();
 
-    Save_Temperature_Data(T_MATRIX);
-    Save_Conversion_Data(ETA_MATRIX);
-    Save_Combustion_Config(n, Particle_Volume_Fraction, Pellet, Ni_Al_Pellet_Combustion);    
+    // Save_Temperature_Data(T_MATRIX);
+    // Save_Conversion_Data(ETA_MATRIX);
+    // Save_Combustion_Config(n, Particle_Volume_Fraction, Pellet, Ni_Al_Pellet_Combustion);    
 
-    std::cout << "Solution saved to file.." << std::endl;
+    // std::cout << "Solution saved to file.." << std::endl;
 
-    return 0;    
+    return 0;
 }

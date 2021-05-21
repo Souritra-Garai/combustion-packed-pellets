@@ -43,3 +43,13 @@ void Reaction::Update_Conversion(long double &eta, long double T, long double Dt
 
     eta = (eta + (omega_prev - eta * omega_derivative) * Dt) / (1 - omega_derivative * Dt);
 }
+
+long double Reaction::Get_Omega(long double T, long double eta)
+{
+    return Reaction_Kinetics.Get_Conversion_Rate(eta, T);
+}
+
+long double Reaction::Get_Energy_Gen_Rate(long double omega)
+{
+    return - Enthalpy_of_Reaction * Particle_Volume_Fraction * omega * Initial_Concentration;
+}

@@ -20,11 +20,13 @@ Combustion_Problem::Combustion_Problem(
     Reaction R,
     long double T_ign,
     long double T_ad
-) : T_VECTOR(n, 0), ETA_VECTOR(n, 0),
-    E_VECTOR(n, 0), F_VECTOR(n, 0), G_VECTOR(n, 0), B_VECTOR(n, 0),
-    SOLVER(n), Pellet(P), Combustion_Reaction(R)
+) : Pellet(P), Combustion_Reaction(R)
 {
     N = n;
+
+    T_VECTOR = new long double[N];
+    
+    ETA_VECTOR = new long double[N];
     
     Delta_t = Dt;
 
@@ -34,111 +36,82 @@ Combustion_Problem::Combustion_Problem(
     Delta_x = Pellet.Get_Pellet_Length() / (N - 1);
 }
 
-void Combustion_Problem::Reset_Equation_Iterators()
-{
-    E = E_VECTOR.begin();
-    F = F_VECTOR.begin();
-    G = G_VECTOR.begin();
-    B = B_VECTOR.begin();
-
-    T = T_VECTOR.begin();
-    ETA = ETA_VECTOR.begin();
-}
-
-bool Combustion_Problem::In_Range_Equation_Iterators()
-{
-    return E < (E_VECTOR.end()-1);
-}
-
-void Combustion_Problem::Increment_Equation_Iterators()
-{
-    E++;
-    F++;
-    G++;
-    B++;
-    
-    T++;
-    ETA++;
-}
-
 bool Combustion_Problem::In_Post_Combustion_Zone(long double Conversion, long double Temperature)
 {
-    return (Conversion > 1.0l - 0.00001l) && In_Range_Equation_Iterators();
+    return (Conversion > 1.0l - 0.00001l);
     // return (Temperature >= Adiabatic_Combustion_Temperature) && In_Range_Equation_Iterators();
 }
 
 bool Combustion_Problem::In_Reaction_Zone(long double Temperature)
 {
-    return (Temperature >= Ignition_Temperature) && In_Range_Equation_Iterators();
-}
-
-void Combustion_Problem::Setup_Solver()
-{
-    Reset_Equation_Iterators();
-
-    // Pellet.Setup_X0_Isothermal_BC_Equation(*E, *F, *G, *B, *T, Delta_x, Delta_t);
-    Pellet.Setup_X0_Adiabatic_Wall_BC_Equation(*E, *F, *G, *B, *T, Delta_x, Delta_t);
-    // Pellet.Setup_X0_Ambient_Heat_Loss_BC_Equation(*E, *F, *G, *B, *T, Delta_x, Delta_t);
-
-    Increment_Equation_Iterators();
-
-    for ( ; In_Post_Combustion_Zone(*ETA, *T); Increment_Equation_Iterators())
-
-        Pellet.Setup_Post_Combustion_Zone_Equation(*E, *F, *G, *B, *T, Delta_x, Delta_t);
-
-    for ( ; In_Reaction_Zone(*T); Increment_Equation_Iterators())
-    {
-        Pellet.Setup_Reaction_Zone_Equation(*E, *F, *G, *B, *T, Delta_x, Delta_t);
-
-        std::pair<long double, long double> Reaction_Terms = Combustion_Reaction.Get_Linear_Expression(*T, *ETA, Delta_t);
-
-        // std::cout << "In Reaction Zone" << std::endl;
-        // std::cout << - Reaction_Terms.second << '\t' << Reaction_Terms.first << std::endl;
-        // std::cout << *F << '\t' << *B << std::endl;
-
-        *F += - Reaction_Terms.second;
-        *B += Reaction_Terms.first;
-    }
-
-    for ( ; In_Range_Equation_Iterators(); Increment_Equation_Iterators())
-    
-        Pellet.Setup_Pre_Heat_Zone_Equation(*E, *F, *G, *B, *T, Delta_x, Delta_t);
-
-    int zone = In_Reaction_Zone(*T) ? (In_Post_Combustion_Zone(*ETA, *T) ? 2 : 1) : 0;
-    // Pellet.Setup_XM_Adiabatic_Wall_BC_Equation(*E, *F, *G, *B, *T, Delta_x, Delta_t);
-    Pellet.Setup_XM_Ambient_Heat_Loss_BC_Equation(*E, *F, *G, *B, *T, Delta_x, Delta_t, zone);
-
-    // std::cout << E_VECTOR << std::endl;
-    // std::cout << F_VECTOR << std::endl;
-    // std::cout << G_VECTOR << std::endl;
-    // std::cout << B_VECTOR << std::endl;
-
-    SOLVER.setup_banded_matrix(E_VECTOR, F_VECTOR, G_VECTOR);
+    return (Temperature >= Ignition_Temperature);
 }
 
 void Combustion_Problem::Solve_and_Update_State()
-{
-    T_VECTOR = SOLVER.solve(B_VECTOR);
+{   
+    long double T_VECTOR_NXT[N];
 
-    // std::cout << T_VECTOR << std::endl;
+    // T_VECTOR_NXT[0] = Adiabatic_Combustion_Temperature; // Isothermal BC
+    // T_VECTOR_NXT[0] = T_VECTOR[1] - Delta_x * 0.0l / (Pellet.Get_Cross_Section_Area() * Pellet.Get_Post_Combustion_Zone_Diffusion_Term_Coeff());  // Adiabatic BC 
+    T_VECTOR_NXT[0] = T_VECTOR[1] - Delta_x * (Pellet.Get_Flat_Surface_Heat_Loss_Term(T_VECTOR[0])) / (Pellet.Get_Cross_Section_Area() * Pellet.Get_Post_Combustion_Zone_Diffusion_Term_Coeff()); // Heat Loss BC
 
-    Reset_Equation_Iterators();
+    #pragma omp parallel for
 
-    for ( ; In_Post_Combustion_Zone(*ETA, *T); Increment_Equation_Iterators()) ;
+        for (int i = 1; i < N-1; i++)
+        {
+            if (T_VECTOR[i] >= Ignition_Temperature)
+            {
+                if (ETA_VECTOR[i] >= 1.0l - 0.00001l)
+                {
+                    T_VECTOR_NXT[i] = T_VECTOR[i] + (Delta_t / Pellet.Get_Post_Combustion_Zone_Transient_Term_Coeff()) * (
+                        Pellet.Get_Post_Combustion_Zone_Diffusion_Term_Coeff() * (T_VECTOR[i+1] - 2 * T_VECTOR[i] + T_VECTOR[i-1]) / (Delta_x * Delta_x) -
+                        Pellet.Get_Lateral_Surface_Heat_Loss_Term(T_VECTOR[i])
+                    );
+                }
 
-    for ( ; In_Reaction_Zone(*T); Increment_Equation_Iterators())
-    {
-        Combustion_Reaction.Update_Conversion(*ETA, *T, Delta_t);
-    }
+                else
+                {
+                    long double omega = Combustion_Reaction.Get_Omega(T_VECTOR[i], ETA_VECTOR[i]);
+
+                    T_VECTOR_NXT[i] = T_VECTOR[i] + (Delta_t / Pellet.Get_Reaction_Zone_Transient_Term_Coeff()) * (
+                        Pellet.Get_Reaction_Zone_Diffusion_Term_Coeff() * (T_VECTOR[i+1] - 2 * T_VECTOR[i] + T_VECTOR[i-1]) / (Delta_x * Delta_x) +
+                        Combustion_Reaction.Get_Energy_Gen_Rate(omega) -
+                        Pellet.Get_Lateral_Surface_Heat_Loss_Term(T_VECTOR[i])
+                    );
+
+                    ETA_VECTOR[i] += omega * Delta_t;
+                }
+            }
+
+            else
+            {
+                T_VECTOR_NXT[i] = T_VECTOR[i] + (Delta_t / Pellet.Get_Pre_Heat_Zone_Transient_Term_Coeff()) * (
+                    Pellet.Get_Pre_Heat_Zone_Diffusion_Term_Coeff() * (T_VECTOR[i+1] - 2 * T_VECTOR[i] + T_VECTOR[i-1]) / (Delta_x * Delta_x) -
+                    Pellet.Get_Lateral_Surface_Heat_Loss_Term(T_VECTOR[i])
+                );
+            }   
+        }
+
+    // T_VECTOR_NXT[N-1] = T_VECTOR[N-2] - Delta_x * 0.0l / (Pellet.Get_Cross_Section_Area() * Pellet.Get_Post_Combustion_Zone_Diffusion_Term_Coeff());  // Adiabatic BC 
+    T_VECTOR_NXT[N-1] = T_VECTOR[N-2] - Delta_x * (Pellet.Get_Flat_Surface_Heat_Loss_Term(T_VECTOR[N-1])) / (Pellet.Get_Cross_Section_Area() * Pellet.Get_Post_Combustion_Zone_Diffusion_Term_Coeff()); // Heat Loss BC
+    
+    #pragma omp parallel for
+    
+        for (int i = 0; i < N; i++) T_VECTOR[i] = T_VECTOR_NXT[i];
 }
 
 std::pair<std::vector<long double>, std::vector<long double>> Combustion_Problem::Iterate()
 {
-    Setup_Solver();
     Solve_and_Update_State();
 
-    std::vector<long double> Temperature(T_VECTOR);
-    std::vector<long double> Conversion(ETA_VECTOR);
+    std::vector<long double> Temperature(N);
+    std::vector<long double> Conversion(N);
+
+    for (int i = 0; i < N; i++)
+    {
+        Temperature[i] = T_VECTOR[i];
+        Conversion[i]  = ETA_VECTOR[i];
+    }
 
     return std::pair<std::vector<long double>, std::vector<long double>> (Temperature, Conversion);
 }
@@ -148,17 +121,20 @@ void Combustion_Problem::Set_Initial_Conditions(
     std::vector<long double> Eta_Array
 )
 {
-    std::copy(T_Array.begin(), T_Array.end(), T_VECTOR.begin());
-    std::copy(Eta_Array.begin(), Eta_Array.end(), ETA_VECTOR.begin());
+    for (int i = 0; i < N; i++)
+    {
+        T_VECTOR[i] = T_Array[i];
+        ETA_VECTOR[i] = Eta_Array[i];
+    }
 }
 
 bool Combustion_Problem::Combustion_Not_Completed()
 {
     bool flag = true;
 
-    for (ETA = ETA_VECTOR.begin(); ETA < (ETA_VECTOR.end()-1) && flag; ETA++)
+    for (int i = 0; i < N && flag; i++)
 
-        flag = (*ETA) > 1.0l - 0.00001l;
+        flag = ETA_VECTOR[i] > 1.0l - 0.00001l;
 
     return !flag;
 }
@@ -179,3 +155,10 @@ void Combustion_Problem::Write_to_File(std::ofstream &file)
     file << std::endl;
 }
 
+Combustion_Problem::~Combustion_Problem()
+{
+    delete[] T_VECTOR;
+    delete[] ETA_VECTOR;
+
+    // printf("\nCombustion Probelem destructor was called\n");
+}

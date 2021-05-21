@@ -35,12 +35,12 @@ void Save_Temperature_Data(std::vector<std::vector<long double>> T_MATRIX)
 
     for (auto T_VECTOR = T_MATRIX.begin(); T_VECTOR < T_MATRIX.end(); T_VECTOR++)
     {
-        for (auto T = T_VECTOR->begin(); T < T_VECTOR->end(); T++)
+        for (auto T = T_VECTOR->begin(); T < T_VECTOR->end()-1; T++)
         {
             file << std::to_string((*T)) << ',';
         }
 
-        file << std::endl;
+        file << std::to_string((*(T_VECTOR->end()-1))) << std::endl;
     }
 
     file.close();
@@ -52,12 +52,12 @@ void Save_Conversion_Data(std::vector<std::vector<long double>> T_MATRIX)
 
     for (auto T_VECTOR = T_MATRIX.begin(); T_VECTOR < T_MATRIX.end(); T_VECTOR++)
     {
-        for (auto T = T_VECTOR->begin(); T < T_VECTOR->end(); T++)
+        for (auto T = T_VECTOR->begin(); T < T_VECTOR->end()-1; T++)
         {
             file << std::to_string((*T)) << ',';
         }
 
-        file << std::endl;
+        file << std::to_string((*(T_VECTOR->end()-1))) << std::endl;
     }
 
     file.close();
