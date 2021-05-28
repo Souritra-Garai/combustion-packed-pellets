@@ -4,7 +4,7 @@
 #include "Combustion_Problem.hpp"
 #include "File_Utilities.hpp"
 
-#define MAX_TIME_ITER   1000000
+#define MAX_TIME_ITER   1000
 #define NO_GRID_POINTS  1001
 
 #define IGNITION_LENGTH 0.8E-3  //  m
@@ -107,21 +107,21 @@ long double Pellet_Diameter = 6.35E-3;  // m
 //     0                       //  Reaction Order in eta
 // );
 
-// Kinetics Du_et_al(
-//     "Du et al 2003",  //  Name of Kinetics Model
-//     541.92l,                //  Pre - Exponential Factor
-//     26.0E3l,                //  Activation Energy
-//     0,                      //  Reaction Order in (1 - eta)
-//     0                       //  Reaction Order in eta
-// );
-
-Kinetics Alawieh_et_al(
-    "Alawieh et al 2003",   //  Name of Kinetics Model
-    12383.0l,               //  Pre - Exponential Factor
-    137.0E3l,               //  Activation Energy
+Kinetics Du_et_al(
+    "Du et al 2003",  //  Name of Kinetics Model
+    541.92l,                //  Pre - Exponential Factor
+    26.0E3l,                //  Activation Energy
     0,                      //  Reaction Order in (1 - eta)
     0                       //  Reaction Order in eta
 );
+
+// Kinetics Alawieh_et_al(
+//     "Alawieh et al 2003",   //  Name of Kinetics Model
+//     12383.0l,               //  Pre - Exponential Factor
+//     137.0E3l,               //  Activation Energy
+//     0,                      //  Reaction Order in (1 - eta)
+//     0                       //  Reaction Order in eta
+// );
 
 // Kinetics White_et_al(
 //     "White et al 2009",     //  Name of Kinetics Model
@@ -148,7 +148,7 @@ std::vector<std::vector<long double>> T_MATRIX;
 std::vector<std::vector<long double>> ETA_MATRIX;
 
 unsigned int No_Grid_Points = NO_GRID_POINTS;
-long double Time_Step_Size = 0.000002;
+long double Time_Step_Size = 0.001;
 
 int main(int argc, char** argv)
 {   
@@ -196,8 +196,8 @@ int main(int argc, char** argv)
     // Interface between kinetics and combustion problem solver
     Reaction Combustion_Reaction(
         // Sundaram_et_al,                         // Kinetics model
-        // Du_et_al,                               // Kinetics model
-        Alawieh_et_al,                          // Kinetics model
+        Du_et_al,                               // Kinetics model
+        // Alawieh_et_al,                          // Kinetics model
         // White_et_al,                            // Kinetics model
         // Maiti_et_al,                            // Kinetics model
         ENTHALPY_CHANGE_COMBUSTION_REACTION,    // Enthalpy change for the reaction
